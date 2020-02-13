@@ -18,7 +18,7 @@ function ExpressionExplorer({land, expression, getExpression, getReadable}) {
 
     const readabilize = expressionId => {
         getReadable(expressionId);
-    }
+    };
 
     return (
         <div className="ExpressionExplorer">
@@ -39,7 +39,7 @@ function ExpressionExplorer({land, expression, getExpression, getReadable}) {
                             <th style={{minWidth:"10%"}} className="text-center">Status</th>
                             <th style={{minWidth:"10%"}} className="text-center">Relevance</th>
                             <th style={{minWidth:"5%"}}> </th>
-                        </tr>}
+                        </tr>
                     </thead>
                     <tbody>
                         {land.expressions.map(expression =>
