@@ -1,0 +1,25 @@
+body {
+  margin: 0;
+}
+
+.App {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.App-header {
+}
+
+.App-panels {
+}
+
+.App-back {
+  cursor: pointer;
+  font-size: 90%;
+  margin-right: .5rem;
+  color: #999;
+}
+
+.App-back:hover {
+  color: #000;
+}
