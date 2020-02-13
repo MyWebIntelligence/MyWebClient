@@ -46,7 +46,7 @@ function LandFilters({index, land, getLand}) {
                     </FormGroup>
                     <FormGroup controlId={"formDepth" + land.id}>
                         <FormLabel>Maximum depth</FormLabel>
-                        <FormControl type="range" min="0" max="3" list={"dep_" + land.id} onChange={setMinDepth}/>
+                        <FormControl type="range" min={land.minDepth} max={land.maxDepth} list={"dep_" + land.id} onChange={setMinDepth}/>
                         <datalist id={"dep_" + land.id}>
                             <option value="0" label="0"/>
                             <option value="1"/>
