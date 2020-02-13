@@ -40,7 +40,9 @@ app.get('/api/lands', (req, res) => {
        l.name,
        l.description,
        MAX(e.relevance) AS maxRelevance,
-       MIN(e.relevance) AS minRelevance
+       MIN(e.relevance) AS minRelevance,
+       MAX(e.depth) AS maxDepth,
+       MIN(e.depth) AS minDepth
     FROM land AS l
     LEFT JOIN expression AS e ON e.land_id = l.id
     WHERE e.http_status = 200
@@ -62,6 +64,7 @@ app.get('/api/land', (req, res) => {
         minRelevance,
         minDepth
     ];
+    console.log(params);
 
     let data;
 
@@ -71,7 +74,9 @@ app.get('/api/land', (req, res) => {
         l.description,
         COUNT(e.id) AS expressionCount,
         MAX(e.relevance) AS maxRelevance,
-        MIN(e.relevance) AS minRelevance
+        MIN(e.relevance) AS minRelevance,
+        MAX(e.depth) AS maxDepth,
+        MIN(e.depth) AS minDepth
     FROM land AS l
     LEFT JOIN expression AS e ON e.land_id = l.id
     WHERE land_id = ?
@@ -81,7 +86,7 @@ app.get('/api/land', (req, res) => {
     GROUP BY e.land_id`;
 
     db.get(sql, params, (err, row) => {
-        data = (!err) ? row : {};
+        data = !err ? row : null;
 
         const sql = `SELECT
            e.id,
@@ -125,7 +130,7 @@ app.get('/api/expression', (req, res) => {
     WHERE e.id = ?`;
 
     db.get(sql, [req.query.id], (err, row) => {
-        let response = (!err) ? row : null;
+        let response = !err ? row : null;
         res.json(response);
     });
 });
@@ -140,7 +145,7 @@ app.get('/api/readable', (req, res) => {
     WHERE id = ?`;
 
     db.get(sql, [req.query.id], (err, row) => {
-        let response = (!err) ? row : null;
+        let response = !err ? row : null;
         if (response) {
             try {
                 Mercury.parse(response.url, {
