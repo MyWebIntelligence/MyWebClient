@@ -1,0 +1,10 @@
+.LandItem-select, .LandItem-select:hover {
+    color: #282c34;
+    display: block;
+    padding: .5em;
+    text-decoration: none!important;
+}
+.LandItem-select.active {
+    background: #282c34;
+    color: #fff;
+}

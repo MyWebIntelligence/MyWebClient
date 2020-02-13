@@ -1,0 +1,76 @@
+.ExpressionExplorer {
+    height: calc(100vh - 70px);
+    position: relative;
+ }
+
+.ExpressionExplorer-list {
+    height: calc(100vh - 94px);
+    position: absolute;
+    top: 0;
+    top:0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+.ExpressionExplorer-list table {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    width: 100%;
+}
+
+.ExpressionExplorer-list table thead {
+    /* head takes the height it requires,
+    and it's not scaled when table is resized */
+    flex: 0 0 auto;
+    width: calc(100% - 0.9em);
+}
+
+.ExpressionExplorer-list table thead tr:first-child th {
+    padding: 0;
+}
+
+.ExpressionExplorer-list table thead th {
+    border-bottom: 1px solid #aaa;
+}
+
+.ExpressionExplorer-list table tbody {
+    /* body takes all the remaining available space */
+    flex: 1 1 auto;
+    display: block;
+    overflow-y: scroll;
+}
+
+.ExpressionExplorer-list table tbody tr {
+    width: 100%;
+}
+
+.ExpressionExplorer-list table thead,
+.ExpressionExplorer-list table tbody tr {
+    display: table;
+    table-layout: fixed;
+}
+
+.ExpressionExplorer-list table tbody tr:hover {
+    background-color: aliceblue;
+    cursor: pointer;
+}
+
+.ExpressionExplorer-details {
+    background: #fff;
+    display: none;
+    position: absolute;
+    top:0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.ExpressionExplorer-readable {
+    height: 50vh!important;
+    overflow-y: scroll;
+}
+
+.ExpressionExplorer-gallery {
+    height: 30vh!important;
+}
