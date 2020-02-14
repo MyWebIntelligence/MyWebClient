@@ -12,7 +12,7 @@ function LandExplorer({lands, getLand}) {
     };
 
     const notConnected  = <div>
-        <h1 className="text-muted">Waiting for database connection...</h1>
+        <h3 className="text-muted">Waiting for database connection...</h3>
     </div>;
 
     return (

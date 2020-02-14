@@ -8,6 +8,7 @@ import Container from "react-bootstrap/Container";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import './App.css';
+import logo from "./logo.svg";
 
 function App() {
     const [lands, setLands] = React.useState([]);
@@ -69,7 +70,7 @@ function App() {
                 <Container fluid>
                     <Row className="align-items-center">
                         <Col md="3">
-                            <h1 className="px-3">MWI Client</h1>
+                            <h1 className="px-3"><img className="App-logo" src={logo} alt=""/></h1>
                         </Col>
                         <Col md="9">
                             <DatabaseLocator location={localStorage.getItem('dbFile') || ""} setLocation={setLocation} />
