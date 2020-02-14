@@ -23,3 +23,8 @@ body {
 .App-back:hover {
   color: #000;
 }
+
+.App-logo {
+  margin: 1rem 0;
+  width: 100%;
+}

@@ -10,7 +10,9 @@ import Col from "react-bootstrap/Col";
 import Badge from "react-bootstrap/Badge";
 
 function ExpressionExplorer({land, expression, getExpression, getReadable}) {
-    const noResult = <div><h1 className="text-muted">No expression to show, please select land</h1></div>;
+    const noResult = <div><h2 className="text-muted">
+        <i className="fas fa-exclamation-triangle"> </i>
+        Select land or change filters</h2></div>;
 
     const load = expressionId => {
         getExpression(expressionId);
@@ -29,7 +31,7 @@ function ExpressionExplorer({land, expression, getExpression, getReadable}) {
                     <thead>
                         <tr>
                             <th colSpan="6">
-                                <h2>{ land.name} <Badge variant="info">Crawled {land.expressionCount}</Badge></h2>
+                                <h2>{ land.name} <Badge pill variant="primary">{land.expressionCount}</Badge></h2>
                             </th>
                         </tr>
                         <tr>
@@ -59,7 +61,7 @@ function ExpressionExplorer({land, expression, getExpression, getReadable}) {
 
             {expression &&
             <section className={"ExpressionExplorer-details" + (expression ? " d-block" : "")}>
-                <h2 className="d-flex align-items-center"><Button variant="light" className="App-back rounded-pill" onClick={_ => getExpression(null)}><i className="fas fa-arrow-left"> </i></Button> {expression.title}</h2>
+                <h2 className="d-flex align-items-center"><Button variant="primary" className="App-back rounded-pill" onClick={_ => getExpression(null)}><i className="fas fa-arrow-left"> </i></Button> {expression.title}</h2>
                 <p className="lead my-5">{expression.description}</p>
                 <Container fluid className="p-0">
                     <Row>

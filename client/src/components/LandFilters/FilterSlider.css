@@ -1,0 +1,5 @@
+input[type=range]:focus {
+    outline: none!important;
+    border: none;
+    box-shadow: none;
+}

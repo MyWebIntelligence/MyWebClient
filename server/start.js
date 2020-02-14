@@ -58,11 +58,11 @@ app.get('/api/land', (req, res) => {
     console.log(`Getting land #${req.query.id}`);
 
     const minRelevance = req.query.minRelevance ?? 0;
-    const minDepth = req.query.minDepth ?? 0;
+    const maxDepth = req.query.maxDepth ?? 0;
     const params = [
         req.query.id,
         minRelevance,
-        minDepth
+        maxDepth
     ];
     console.log(params);
 
@@ -82,11 +82,11 @@ app.get('/api/land', (req, res) => {
     WHERE land_id = ?
         AND e.http_status = 200
         AND e.relevance >= ?
-        AND e.depth >= ?
+        AND e.depth <= ?
     GROUP BY e.land_id`;
 
     db.get(sql, params, (err, row) => {
-        data = !err ? row : null;
+        data = !err ? row : [];
 
         const sql = `SELECT
            e.id,
@@ -100,12 +100,16 @@ app.get('/api/land', (req, res) => {
         WHERE land_id = ?
           AND e.http_status = 200
           AND e.relevance >= ?
-          AND e.depth >= ?
+          AND e.depth <= ?
         LIMIT 50`;
 
         db.all(sql, params, (err, rows) => {
-            data.expressions = (!err) ? rows : [];
-            res.json(data);
+            if (rows.length === 0) {
+                res.json(rows)
+            } else {
+                data.expressions = (!err) ? rows : [];
+                res.json(data);
+            }
         });
     });
 });
