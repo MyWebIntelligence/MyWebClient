@@ -1,46 +1,44 @@
-import React, {useEffect} from "react";
-import axios from "axios";
-import FormControl from "react-bootstrap/FormControl";
-import InputGroup from "react-bootstrap/InputGroup";
+import React, {useContext, useEffect} from 'react';
+import {Context} from '../../config/Context';
+import FormControl from 'react-bootstrap/FormControl';
+import InputGroup from 'react-bootstrap/InputGroup';
 
-function DatabaseLocator({location, setLocation}) {
+
+function DatabaseLocator() {
+    const context = useContext(Context);
+
     /**
      * Test connection once at first render
      */
     useEffect(() => {
-        testConnection()
+        setTimeout(() => {
+            context.setDb(localStorage.getItem('dbFile'));
+        }, 1000);
     }, []);
 
-    const [success, setSuccess] = React.useState(false);
-    const [dbFile, setDbFile] = React.useState(location || "");
+    let stateClass = 'text-danger fas fa-exclamation-circle';
 
-    const testConnection = () => {
-        if (dbFile !== "") {
-            axios.get('/api/connect?db=' + encodeURI(dbFile.toString())).then(res => {
-                setSuccess(res.data);
-                setLocation(dbFile, res.data);
-            });
-        } else {
-            setSuccess(false);
-            setLocation(dbFile, false);
-        }
-    };
+    if (context.connecting) {
+        stateClass = 'text-warning fas fa-spinner spin';
+    } else if (context.isConnected) {
+        stateClass = 'text-success fas fa-check-circle';
+    }
 
     return (
-        <div className="py-3">
-            <InputGroup>
-                <InputGroup.Prepend>
-                    <InputGroup.Text><i className="fas fa-database"> </i></InputGroup.Text>
-                </InputGroup.Prepend>
-                <FormControl id="dbLocation" onChange={e => setDbFile(e.target.value)} onBlur={testConnection} value={dbFile} placeholder="Paste database file path here" />
-                <InputGroup.Append>
-                    <InputGroup.Text>
-                        <i className={success ? "text-success fas fa-check-circle" : "text-danger fas fa-exclamation-circle"}> </i>
-                    </InputGroup.Text>
-                </InputGroup.Append>
-            </InputGroup>
-        </div>
-    );
+        <InputGroup>
+            <InputGroup.Prepend>
+                <InputGroup.Text><i className="fas fa-database"> </i></InputGroup.Text>
+            </InputGroup.Prepend>
+            <FormControl id="dbLocation" onBlur={e => context.setDb(e.target.value)}
+                         defaultValue={localStorage.getItem('dbFile')}
+                         placeholder="Paste database file path here"/>
+            <InputGroup.Append>
+                <InputGroup.Text>
+                    <i className={stateClass}> </i>
+                </InputGroup.Text>
+            </InputGroup.Append>
+        </InputGroup>
+    )
 }
 
 export default DatabaseLocator;

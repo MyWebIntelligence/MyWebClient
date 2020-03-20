@@ -1,36 +1,35 @@
-import React from "react";
-import LandFilters from '../LandFilters/LandFilters';
+import React, {useContext} from 'react';
+import {Context} from '../../config/Context';
+import LandFilters from './LandFilters';
 import './LandExplorer.css';
-import Accordion from "react-bootstrap/Accordion";
-import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
+import {FormControl} from 'react-bootstrap';
 
-function LandExplorer({lands, getLand}) {
+function LandExplorer() {
+    const context = useContext(Context);
+    const notConnected = <option>Waiting for database connection...</option>;
+    const currentId = context.currentLand !== null ? context.currentLand.id : null;
 
-    const load = landId => {
-        getLand(landId);
+    const switchLand = event => {
+        const id = parseInt(event.target.value);
+        context.getLand(id);
+        console.log(context);
     };
 
-    const notConnected  = <div>
-        <h3 className="text-muted">Waiting for database connection...</h3>
-    </div>;
-
     return (
-        <Accordion defaultActiveKey="0">
-        {lands.map((land, index) =>
-            <Card key={index}>
-                <Card.Header className="LandExplorer-header d-flex justify-content-between">
-                    <Button value={land.id} variant="link" onClick={_ => load(land.id)}>{land.name}</Button>
-                    <Accordion.Toggle as={Button} variant="link" eventKey={index}>
-                        <i className="fas fa-cog m-1"> </i>
-                    </Accordion.Toggle>
-                </Card.Header>
-                <LandFilters index={index} land={land} getLand={getLand}/>
-            </Card>
-        )}
-        { lands.length > 0 || notConnected}
-        </Accordion>
+        <div>
+            <FormControl as="select" onChange={switchLand} disabled={!context.isConnected} defaultValue={currentId}>
+                {context.lands.map((land, index) => {
+                    return (
+                        <option key={index} value={land.id}>
+                            {land.name}
+                        </option>
+                    )
+                })}
+                {context.lands.length > 0 || notConnected}
+            </FormControl>
+            {context.currentLand && <LandFilters landId={context.currentLand.id}/>}
+        </div>
     );
-};
+}
 
 export default LandExplorer;
