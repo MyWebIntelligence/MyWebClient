@@ -66,11 +66,15 @@ const DataQueries = {
             req.query.limit ?? 50,
         ];
 
-        const sql = `SELECT e.id,
+        const column = req.query.sortColumn;
+        const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC';
+
+        const sql = `SELECT e.id AS id,
                             e.title,
                             e.url,
                             e.http_status AS httpStatus,
                             e.relevance,
+                            d.id          AS domainId,
                             d.name        AS domainName
                      FROM expression AS e
                               JOIN domain AS d ON d.id = e.domain_id
@@ -78,11 +82,28 @@ const DataQueries = {
                        AND e.http_status = 200
                        AND e.relevance >= ?
                        AND e.depth <= ?
+                     ORDER BY ${column} ${order}
                      LIMIT ?, ?`;
-
         db.all(sql, params, (err, rows) => {
-            let response = (!err) ? rows : false;
+            let response = (!err) ? rows : [];
             res.json(response)
+        });
+    },
+
+    getDomain: (req, res) => {
+        const sql = `SELECT d.id,
+                            d.name,
+                            d.title,
+                            d.description,
+                            d.keywords,
+                            COUNT(e.id) AS expressionCount
+                     FROM domain AS d
+                              JOIN expression AS e ON e.domain_id = d.id
+                     WHERE d.id = ?`;
+
+        db.get(sql, [req.query.id], (err, row) => {
+            let response = !err ? row : null;
+            res.json(response);
         });
     },
 
@@ -96,6 +117,7 @@ const DataQueries = {
                             e.readable,
                             e.relevance,
                             e.depth,
+                            d.id                AS domainId,
                             d.name              AS domainName,
                             GROUP_CONCAT(m.url) AS images
                      FROM expression AS e
@@ -128,7 +150,7 @@ const DataQueries = {
                      LIMIT 1`;
 
         db.get(sql, params, (err, row) => {
-            let response = !err ? row.id : null;
+            let response = !err && row ? row.id : null;
             res.json(response);
         });
     },
@@ -152,7 +174,7 @@ const DataQueries = {
                      LIMIT 1`;
 
         db.get(sql, params, (err, row) => {
-            let response = !err ? row.id : null;
+            let response = !err && row ? row.id : null;
             res.json(response);
         });
     },
@@ -170,7 +192,7 @@ const DataQueries = {
                     Mercury.parse(response.url, {
                         contentType: 'markdown',
                     }).then(result => {
-                        this.saveReadable(response.id, result.content);
+                        console.log(result.content);
                         res.json(result.content);
                     }).catch(err => {
                         console.log(err);
@@ -186,20 +208,38 @@ const DataQueries = {
         });
     },
 
-    saveReadable: (id, content) => {
+    saveReadable: (req, res) => {
         try {
-            db.run('UPDATE expression SET readable = ? WHERE id = ?', [content, id], err => {
+            db.run('UPDATE expression SET readable = ? WHERE id = ?', [req.body.content, req.body.id], err => {
                 if (err) {
-                    console.log(`Error : ${err.code} on processing readable #${id}`);
+                    console.log(`Error : ${err.code} on processing readable #${req.body.id}`);
                 } else {
-                    const byteSize = Buffer.from(content).length;
-                    console.log(`Saved ${byteSize} bytes from readable #${id}`);
+                    const byteSize = Buffer.from(req.body.content).length;
+                    console.log(`Saved ${byteSize} bytes from readable #${req.body.id}`);
+                    res.json(true)
                 }
             });
         } catch (err) {
-            console.log(`Error : undefined content for expression #${id}`);
+            console.log(`Error : undefined content for expression #${req.body.id}`);
+            res.json(false)
         }
-    }
+    },
+
+    deleteExpression: (req, res) => {
+        db.serialize(() => {
+            db.run(`DELETE
+                    FROM expression
+                    WHERE id = ?`, req.query.id)
+                .run(`DELETE
+                      FROM media
+                      WHERE expression_id = ?`, req.query.id)
+                .run(`DELETE
+                      FROM expressionlink
+                      WHERE source_id = ?
+                         OR target_id = ?`, [req.query.id, req.query.id]);
+        });
+    },
+
 };
 
 export default DataQueries;

@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {Context} from '../../config/Context';
+import {Context} from '../../app/Context';
 import LandFilters from './LandFilters';
 import './LandExplorer.css';
 import {FormControl} from 'react-bootstrap';

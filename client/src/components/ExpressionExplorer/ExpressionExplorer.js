@@ -1,13 +1,13 @@
 import React, {useContext} from 'react';
-import {Context} from '../../config/Context';
+import {Context} from '../../app/Context';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 import './ExpressionExplorer.css'
-import Container from "react-bootstrap/Container";
-import Form from "react-bootstrap/Form";
+import Expression from "./Expression";
+import Domain from "../Domain/Domain";
 
 function ExpressionExplorer() {
     const context = useContext(Context);
@@ -24,12 +24,13 @@ function ExpressionExplorer() {
         }
     };
 
-    const textSelection = event => {
-        console.log(event.currentTarget.selectionStart, event.currentTarget.selectionEnd);
+    const sortHint = (column, label) => {
+        const sortHint = context.sortOrder === 1 ? <i className="fas fa-caret-up"/> : <i className="fas fa-caret-down"/>;
+        return (column === context.sortColumn) ? <span className="text-primary">{label} {sortHint}</span> : label;
     };
 
     const noResult = <div>
-        <h2 className="text-muted"><i className="fas fa-exclamation-triangle"> </i> Select land or change filters</h2>
+        <h2 className="text-muted"><i className="fas fa-exclamation-triangle" /> Select land or change filters</h2>
     </div>;
 
     return (
@@ -39,17 +40,21 @@ function ExpressionExplorer() {
             <section className="ExpressionExplorer-list">
                 <Row>
                     <Col md="6">
-                        <h2>{context.currentLand.name}
+                        <h6 className="App-objtype">Land</h6>
+                        <h2>
+                            <span className="pr-2">{context.currentLand.name}</span>
                             <Badge pill variant="primary">{context.currentLand.expressionCount}</Badge>
                         </h2>
                     </Col>
-                    <Col md="6" className="text-right">
-                        <Button size="sm" variant="link" onClick={setPrevPage}>
-                            <i className="fas fa-arrow-left"> </i>
+                    <Col md="6" className="d-flex align-items-center justify-content-end">
+                        <Button size="sm" className="rounded-pill mx-1" onClick={setPrevPage}>
+                            <i className="fas fa-arrow-left" />
                         </Button>
-                        <span>Page {context.currentPage}/{context.pageCount}</span>
-                        <Button size="sm" variant="link" onClick={setNextPage}>
-                            <i className="fas fa-arrow-right"> </i>
+
+                        <span className="h4">{context.currentPage}/{context.pageCount}</span>
+
+                        <Button size="sm" className="rounded-pill mx-1" onClick={setNextPage}>
+                            <i className="fas fa-arrow-right" />
                         </Button>
                     </Col>
                 </Row>
@@ -57,23 +62,43 @@ function ExpressionExplorer() {
                 <Table borderless>
                     <thead>
                     <tr>
-                        <th style={{width: "5%"}} className="text-center">#</th>
-                        <th style={{width: "60%"}}>Title</th>
-                        <th style={{width: "20%"}} className="text-center">Domain</th>
-                        <th style={{width: "10%"}} className="text-center">Relevance</th>
+                        <th style={{width: "5%"}} className="text-center">
+                            <div className="custom-control custom-checkbox">
+                                <input type="checkbox" className="custom-control-input"/>
+                                <label className="custom-control-label"/>
+                            </div>
+                        </th>
+                        <th style={{width: "5%"}} className="text-center">
+                            <span onClick={_ => {context.setSortColumn('id')}}>{sortHint('id', '#')}</span>
+                        </th>
+                        <th style={{width: "55%"}}>
+                            <span onClick={_ => {context.setSortColumn('title')}}>{sortHint('title', 'Title')}</span>
+                        </th>
+                        <th style={{width: "20%"}} className="text-center">
+                            <span onClick={_ => {context.setSortColumn('domainName')}}>{sortHint('domainName', 'Domain')}</span>
+                        </th>
+                        <th style={{width: "10%"}} className="text-center">
+                            <span onClick={_ => {context.setSortColumn('relevance')}}>{sortHint('relevance', 'Relevance')}</span>
+                        </th>
                         <th style={{width: "5%"}}>&nbsp;</th>
                     </tr>
                     </thead>
                     <tbody>
                     {context.expressions.map((expression, index) =>
-                        <tr key={index} onClick={_ => context.getExpression(expression.id)} data-id={expression.id}>
+                        <tr key={index}>
+                            <td style={{width: "5%"}} className="text-center">
+                                <div className="custom-control custom-checkbox">
+                                    <input type="checkbox" className="custom-control-input"/>
+                                    <label className="custom-control-label"/>
+                                </div>
+                            </td>
                             <td style={{width: "5%"}} className="text-center">{expression.id}</td>
-                            <td style={{width: "60%"}}>{expression.title}</td>
-                            <td style={{width: "20%"}} className="text-center">{expression.domainName}</td>
+                            <td style={{width: "60%"}}><span className="hover-pill" onClick={_ => context.getExpression(expression.id)}>{expression.title}</span></td>
+                            <td style={{width: "20%"}} className="text-center"><span className="hover-pill" onClick={_ => context.getDomain(expression.domainId)}>{expression.domainName}</span></td>
                             <td style={{width: "10%"}} className="text-center">{expression.relevance}</td>
                             <td style={{width: "5%"}} className="text-center">
                                 <a href={expression.url} target="_blank" rel="noopener noreferrer">
-                                    <i className="fas fa-external-link-alt"> </i>
+                                    <i className="fas fa-external-link-alt" />
                                 </a>
                             </td>
                         </tr>
@@ -86,48 +111,8 @@ function ExpressionExplorer() {
             </section>
             }
 
-            {context.currentExpression &&
-            <section className={"ExpressionExplorer-details" + (context.currentExpression ? " d-block" : "")}>
-                <h2 className="d-flex align-items-center">
-                    <Button variant="primary" className="App-back rounded-pill"
-                            onClick={_ => context.getExpression(null)}>
-                        <i className="fas fa-arrow-left"> </i>
-                    </Button> {context.currentExpression.title}
-                </h2>
-                <p className="lead my-5">{context.currentExpression.description}</p>
-                <Container fluid className="p-0">
-                    <Row>
-                        <Col md="8">
-                            <Form.Group controlId={"expressionForm" + context.currentExpression.id}>
-                                <Form.Label>
-                                    <Button className="rounded-pill"
-                                            onClick={_ => context.getReadable(context.currentExpression.id)}>Readabilize</Button>
-                                </Form.Label>
-                                <Form.Control as="textarea" className="ExpressionExplorer-readable"
-                                              value={context.currentExpression.readable} onChange={_ => {
-                                }} onMouseUp={textSelection}/>
-                            </Form.Group>
-                            <Row>
-                                <Col md="5" className="text-right">
-                                    <Button
-                                        onClick={_ => context.getPrevExpression(context.currentExpression.id, context.currentExpression.landId)}>Prev</Button>
-                                </Col>
-                                <Col md="2" className="text-center">
-                                    <Button variant="outline-danger">Delete</Button>
-                                </Col>
-                                <Col md="5" className="text-left">
-                                    <Button
-                                        onClick={_ => context.getNextExpression(context.currentExpression.id, context.currentExpression.landId)}>Next</Button>
-                                </Col>
-                            </Row>
-                        </Col>
-                        <Col md="4">
-
-                        </Col>
-                    </Row>
-                </Container>
-            </section>
-            }
+            {context.currentExpression && <Expression/>}
+            {context.currentDomain && <Domain/>}
         </div>
     );
 }

@@ -4,6 +4,10 @@ html {
     font-size: 86%;
 }
 
+.hover-pill:hover {
+    color: #007bff;
+}
+
 .panel {
     border: 1px solid #ced4da;
     padding: 0 15px;
@@ -31,4 +35,12 @@ html {
 .App-view {
     grid-row-start: 2;
     grid-row-end: 3;
+}
+
+.App-objtype {
+    color: #007bff;
+    font-weight: 700;
+    font-size: .7em;
+    margin: 0;
+    text-transform: uppercase;
 }

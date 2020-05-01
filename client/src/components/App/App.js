@@ -1,5 +1,5 @@
 import React from 'react';
-import {ConfigContext} from '../../config/Context';
+import {ConfigContext} from '../../app/Context';
 import LandExplorer from '../LandExplorer/LandExplorer';
 import ExpressionExplorer from '../ExpressionExplorer/ExpressionExplorer';
 import DatabaseLocator from '../DatabaseLocator/DatabaseLocator';
