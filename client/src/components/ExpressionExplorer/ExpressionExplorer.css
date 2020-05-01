@@ -23,7 +23,8 @@
     width: calc(100% - 0.9em);
 }
 
-.ExpressionExplorer-list table thead tr:first-child th {
+.ExpressionExplorer-list table thead th span {
+    cursor: pointer;
 }
 
 .ExpressionExplorer-list table thead th {
@@ -65,11 +66,49 @@
     left: 0;
 }
 
-.ExpressionExplorer-readable {
+.ExpressionExplorer-highlit, .ExpressionExplorer-highlit-backdrop, .ExpressionExplorer-readable {
+    width: 100%;
     height: 50vh!important;
+}
+
+.ExpressionExplorer-readable {
     overflow-y: scroll;
 }
 
 .ExpressionExplorer-gallery {
     height: 30vh!important;
 }
+
+.ExpressionExplorer-highlit {
+    position: relative;
+}
+
+.ExpressionExplorer-highlit textarea {
+    background-color: transparent;
+    color: #444;
+    margin: 0;
+    position: absolute;
+    z-index: 2;
+}
+
+.ExpressionExplorer-highlit mark {
+    color: transparent;
+    background-color: #007bff;
+    opacity: .35;
+}
+
+.ExpressionExplorer-highlit-backdrop {
+    border: 1px solid transparent;
+    height: auto;
+    overflow: auto;
+    padding: .375rem .75rem;
+    position: absolute;
+    z-index: 1;
+}
+
+.ExpressionExplorer-highlights {
+    color: transparent;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+

@@ -2,11 +2,11 @@ import React, {useContext} from 'react';
 import './LandFilters.css';
 import Form from 'react-bootstrap/Form';
 import FilterSlider from './FilterSlider';
-import {Context} from '../../config/Context';
+import {Context} from '../../app/Context';
+import {delay} from '../../app/Util';
 
 function LandFilters() {
     const context = useContext(Context);
-    let timer;
 
     const onChangeRelevance = (value) => {
         delay(context.setCurrentRelevance, parseInt(value));
@@ -14,13 +14,6 @@ function LandFilters() {
 
     const onChangeDepth = (value) => {
         delay(context.setCurrentDepth, parseInt(value));
-    };
-
-    const delay = (callback, value) => {
-        clearTimeout(timer);
-        timer = setTimeout((value) => {
-            callback(value);
-        }, 400, value);
     };
 
     return (

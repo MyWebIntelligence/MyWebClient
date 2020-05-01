@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import querystring from 'querystring';
+import {delay} from "./Util";
 
 export const DEFAULT_RELEVANCE = 0;
 export const DEFAULT_DEPTH = 2;
@@ -14,6 +15,7 @@ export class ConfigContext extends Component {
             isConnected: false,
             connecting: false,
             lands: [],
+            currentDomain: null,
             currentLand: null,
             expressions: [],
             currentExpression: null,
@@ -27,6 +29,8 @@ export class ConfigContext extends Component {
             pageCount: 0,
             currentPage: 1,
             resultsPerPage: 50,
+            sortColumn: 'id',
+            sortOrder: 1
         };
         this.state = this.initialState;
     }
@@ -65,6 +69,7 @@ export class ConfigContext extends Component {
     getLand = id => {
         if (id === null) {
             this.setState({
+                currentDomain: null,
                 currentLand: null,
                 expressions: [],
                 currentExpression: null,
@@ -89,6 +94,7 @@ export class ConfigContext extends Component {
             axios.get(`/api/land?${querystring.stringify(params)}`).then(res => {
                 console.log(`Loaded land #${id}`);
                 this.setState({
+                    currentDomain: null,
                     currentLand: res.data,
                     currentExpression: null,
                     resultCount: res.data.expressionCount,
@@ -118,12 +124,25 @@ export class ConfigContext extends Component {
             maxDepth: this.state.currentDepth,
             offset: (this.state.currentPage - 1) * this.state.resultsPerPage,
             limit: this.state.resultsPerPage,
+            sortColumn: this.state.sortColumn,
+            sortOrder: this.state.sortOrder,
         };
         axios.get(`/api/expressions?${querystring.stringify(params)}`).then(res => {
             console.log(`Loaded expressions from land #${landId}`);
             this.getLand(landId);
             this.setState({expressions: res.data});
         });
+    };
+
+    getDomain = id => {
+        if (id === null) {
+            this.setState({currentDomain: null});
+        } else {
+            axios.get(`/api/domain?id=${id}`).then(res => {
+                console.log(`Loaded domain #${id}`);
+                this.setState({currentDomain: res.data});
+            });
+        }
     };
 
     getExpression = id => {
@@ -137,6 +156,12 @@ export class ConfigContext extends Component {
         }
     };
 
+    deleteExpression = id => {
+        axios.get(`/api/deleteExpression?id=${id}`).then(res => {
+            console.log(`Loaded expression #${id}`);
+        });
+    }
+
     getPrevExpression = (id, landId) => {
         const params = {
             landId: landId,
@@ -147,8 +172,8 @@ export class ConfigContext extends Component {
         axios.get(`/api/prev?${querystring.stringify(params)}`).then(res => {
             if (res.data !== null) {
                 console.log(`Prev expression is #${res.data}`);
-                this.getExpression(res.data);
             }
+            this.getExpression(res.data);
         });
     };
 
@@ -162,13 +187,14 @@ export class ConfigContext extends Component {
         axios.get(`/api/next?${querystring.stringify(params)}`).then(res => {
             if (res.data !== null) {
                 console.log(`Next expression is #${res.data}`);
-                this.getExpression(res.data);
             }
+            this.getExpression(res.data);
         });
     };
 
     setCurrentRelevance = value => {
         this.setState({currentRelevance: value}, () => {
+            this.setCurrentPage(1);
             this.getExpressions(this.state.currentLand.id);
         });
     };
@@ -181,7 +207,7 @@ export class ConfigContext extends Component {
 
     setCurrentPage = value => {
         this.setState({currentPage: value}, () => {
-            this.getExpressions(this.state.currentLand.id);
+            delay(this.getExpressions, this.state.currentLand.id);
         });
     };
 
@@ -193,7 +219,42 @@ export class ConfigContext extends Component {
 
     getReadable = expressionId => {
         axios.get(`/api/readable?id=${expressionId}`).then(res => {
+            this.setState(state => {
+                const expression = state.currentExpression
+                expression.readable = res.data
+                return {
+                    currentExpression: expression
+                }
+            })
+        });
+    };
 
+    saveReadable = (expressionId, content) => {
+        axios.post(`/api/readable`, {
+            id: expressionId,
+            content: content
+        }).then(res => {
+            return res.data
+        });
+    };
+
+    setSortColumn = column => {
+        if (this.state.sortColumn === column) {
+            this.setState(currentState => {
+                return {sortOrder: currentState.sortOrder * -1}
+            }, () => {
+                this.getExpressions(this.state.currentLand.id);
+            })
+        } else {
+            this.setState({sortColumn: column}, () => {
+                this.getExpressions(this.state.currentLand.id);
+            });
+        }
+    };
+
+    setSortOrder = order => {
+        this.setState({sortOrder: parseInt(order)}, () => {
+            this.getExpressions(this.state.currentLand.id);
         });
     };
 
@@ -203,14 +264,19 @@ export class ConfigContext extends Component {
             setDb: this.setDb,
             getLand: this.getLand,
             getExpressions: this.getExpressions,
+            getDomain: this.getDomain,
             getExpression: this.getExpression,
+            deleteExpression: this.deleteExpression,
             getPrevExpression: this.getPrevExpression,
             getNextExpression: this.getNextExpression,
             setCurrentRelevance: this.setCurrentRelevance,
             setCurrentDepth: this.setCurrentDepth,
             setCurrentPage: this.setCurrentPage,
             setResultsPerPage: this.setResultsPerPage,
-            getReadable: this.getReadable
+            getReadable: this.getReadable,
+            saveReadable: this.saveReadable,
+            setSortColumn: this.setSortColumn,
+            setSortOrder: this.setSortOrder,
         };
         return (
             <Context.Provider value={state}>

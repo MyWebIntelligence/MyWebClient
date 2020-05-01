@@ -1,5 +1,5 @@
 import React, {useContext, useEffect} from 'react';
-import {Context} from '../../config/Context';
+import {Context} from '../../app/Context';
 import FormControl from 'react-bootstrap/FormControl';
 import InputGroup from 'react-bootstrap/InputGroup';
 
@@ -27,7 +27,7 @@ function DatabaseLocator() {
     return (
         <InputGroup>
             <InputGroup.Prepend>
-                <InputGroup.Text><i className="fas fa-database"> </i></InputGroup.Text>
+                <InputGroup.Text><i className="fas fa-database" /></InputGroup.Text>
             </InputGroup.Prepend>
             <FormControl id="dbLocation" onBlur={e => context.setDb(e.target.value)}
                          defaultValue={localStorage.getItem('dbFile')}

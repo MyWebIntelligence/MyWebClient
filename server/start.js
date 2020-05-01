@@ -3,6 +3,9 @@ import bodyParser from 'body-parser';
 import DataQueries from './DataQueries';
 
 const app = express();
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
 const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
@@ -28,9 +31,19 @@ app.get('/api/expressions', (req, res) => {
     DataQueries.getExpressions(req, res);
 });
 
+app.get('/api/domain', (req, res) => {
+    console.log(`Getting domain #${req.query.id}`);
+    DataQueries.getDomain(req, res);
+});
+
 app.get('/api/expression', (req, res) => {
     console.log(`Getting expression #${req.query.id}`);
     DataQueries.getExpression(req, res);
+});
+
+app.get('/api/deleteExpression', (req, res) => {
+    console.log(`Deleting expression #${req.query.id}`);
+    DataQueries.deleteExpression(req, res);
 });
 
 app.get('/api/prev', (req, res) => {
@@ -44,8 +57,13 @@ app.get('/api/next', (req, res) => {
 });
 
 app.get('/api/readable', (req, res) => {
-    console.log(`Setting readable for expression #${req.query.id}`);
+    console.log(`Getting readable for expression #${req.query.id}`);
     DataQueries.getReadable(req, res);
+});
+
+app.post('/api/readable', (req, res) => {
+    console.log(`Setting readable for expression #${req.body.id}`);
+    DataQueries.saveReadable(req, res);
 });
 
 /*
