@@ -1,5 +1,6 @@
 import sqlite from "sqlite3";
 import Mercury from "@postlight/mercury-parser";
+import {log, placeholders} from "../client/src/app/Util";
 
 let db;
 
@@ -8,7 +9,7 @@ const DataQueries = {
         const normPath = (filename) => filename.replace(/\\/g, '/');
         db = new sqlite.Database(normPath(req.query.db), sqlite.OPEN_READWRITE, (err) => {
             if (err) console.error(err.message);
-            else console.log(`Connected to ${req.query.db}`);
+            else log(`Connected to ${req.query.db}`);
             res.json(!err);
         });
     },
@@ -27,7 +28,7 @@ const DataQueries = {
                        AND e.relevance >= 0
                      GROUP BY e.land_id`;
         db.all(sql, (err, rows) => {
-            let response = (!err) ? rows : [];
+            const response = !err ? rows : [];
             res.json(response);
         });
     },
@@ -37,22 +38,26 @@ const DataQueries = {
             req.query.id,
             req.query.minRelevance ?? 0,
             req.query.maxDepth ?? 3,
+            req.query.id,
         ];
 
         const sql = `SELECT l.id,
                             l.name,
                             l.description,
-                            COUNT(e.id) AS expressionCount
+                            (SELECT COUNT(*)
+                             FROM expression
+                             WHERE land_id = ?
+                               AND http_status = 200
+                               AND relevance >= ?
+                               AND depth <= ?
+                            ) AS expressionCount
                      FROM land AS l
                               LEFT JOIN expression AS e ON e.land_id = l.id
-                     WHERE land_id = ?
-                       AND e.http_status = 200
-                       AND e.relevance >= ?
-                       AND e.depth <= ?
-                     GROUP BY e.land_id`;
+                     WHERE l.id = ?
+                     GROUP BY l.id`;
 
         db.get(sql, params, (err, row) => {
-            let response = (!err) ? row : false;
+            const response = !err ? row : false;
             res.json(response);
         });
     },
@@ -85,7 +90,7 @@ const DataQueries = {
                      ORDER BY ${column} ${order}
                      LIMIT ?, ?`;
         db.all(sql, params, (err, rows) => {
-            let response = (!err) ? rows : [];
+            const response = !err ? rows : [];
             res.json(response)
         });
     },
@@ -102,7 +107,7 @@ const DataQueries = {
                      WHERE d.id = ?`;
 
         db.get(sql, [req.query.id], (err, row) => {
-            let response = !err ? row : null;
+            const response = !err ? row : null;
             res.json(response);
         });
     },
@@ -126,7 +131,7 @@ const DataQueries = {
                      WHERE e.id = ?`;
 
         db.get(sql, [req.query.id], (err, row) => {
-            let response = !err ? row : null;
+            const response = !err ? row : null;
             res.json(response);
         });
     },
@@ -150,7 +155,7 @@ const DataQueries = {
                      LIMIT 1`;
 
         db.get(sql, params, (err, row) => {
-            let response = !err && row ? row.id : null;
+            const response = !err && row ? row.id : null;
             res.json(response);
         });
     },
@@ -174,7 +179,7 @@ const DataQueries = {
                      LIMIT 1`;
 
         db.get(sql, params, (err, row) => {
-            let response = !err && row ? row.id : null;
+            const response = !err && row ? row.id : null;
             res.json(response);
         });
     },
@@ -186,20 +191,19 @@ const DataQueries = {
                      WHERE id = ?`;
 
         db.get(sql, [req.query.id], (err, row) => {
-            let response = !err ? row : null;
+            const response = !err ? row : null;
             if (response) {
                 try {
                     Mercury.parse(response.url, {
                         contentType: 'markdown',
                     }).then(result => {
-                        console.log(result.content);
                         res.json(result.content);
                     }).catch(err => {
-                        console.log(err);
+                        log(err);
                         res.json(null);
                     });
                 } catch (err) {
-                    console.log(err);
+                    log(err);
                     res.json(null);
                 }
             } else {
@@ -212,15 +216,15 @@ const DataQueries = {
         try {
             db.run('UPDATE expression SET readable = ? WHERE id = ?', [req.body.content, req.body.id], err => {
                 if (err) {
-                    console.log(`Error : ${err.code} on processing readable #${req.body.id}`);
+                    log(`Error : ${err.code} on processing readable #${req.body.id}`);
                 } else {
                     const byteSize = Buffer.from(req.body.content).length;
-                    console.log(`Saved ${byteSize} bytes from readable #${req.body.id}`);
+                    log(`Saved ${byteSize} bytes from readable #${req.body.id}`);
                     res.json(true)
                 }
             });
         } catch (err) {
-            console.log(`Error : undefined content for expression #${req.body.id}`);
+            log(`Error : undefined content for expression #${req.body.id}`);
             res.json(false)
         }
     },
@@ -229,17 +233,89 @@ const DataQueries = {
         db.serialize(() => {
             db.run(`DELETE
                     FROM expression
-                    WHERE id = ?`, req.query.id)
+                    WHERE id IN (${placeholders(req.query.id)})`, req.query.id)
                 .run(`DELETE
                       FROM media
-                      WHERE expression_id = ?`, req.query.id)
+                      WHERE expression_id IN (${placeholders(req.query.id)})`, req.query.id)
                 .run(`DELETE
                       FROM expressionlink
-                      WHERE source_id = ?
-                         OR target_id = ?`, [req.query.id, req.query.id]);
+                      WHERE source_id IN (${placeholders(req.query.id)})
+                         OR target_id IN (${placeholders(req.query.id)})`, [req.query.id, req.query.id]);
+        });
+        return res.json(true);
+    },
+
+    getTags: (req, res) => {
+        const buildTagTree = rows => {
+            const tree = [];
+            const lookup = {};
+            rows.forEach((r) => {
+                lookup[r.id] = r;
+                lookup[r.id].children = [];
+            });
+            rows.forEach((r) => {
+                if (r.parent_id !== null) {
+                    lookup[r.parent_id].children.push(r);
+                } else {
+                    tree.push(r);
+                }
+            });
+            return tree;
+        };
+
+        const sql = `SELECT
+                       id,
+                       land_id,
+                       parent_id,
+                       name AS title,
+                       sorting,
+                       color    
+                     FROM tag
+                     WHERE land_id = ?
+                     ORDER BY parent_id, sorting`;
+        db.all(sql, [req.query.landId], (err, rows) => {
+            const response = !err ? buildTagTree(rows) : [];
+            res.json(response)
         });
     },
 
+    setTags: (req, res) => {
+        const insert = db.prepare("INSERT INTO tag (land_id, parent_id, name, sorting, color) VALUES (?, ?, ?, ?, ?)");
+        const update = db.prepare("UPDATE tag SET parent_id = ?, name = ?, sorting = ?, color = ? WHERE id = ?")
+        const remove = db.prepare("DELETE FROM tag WHERE id = ?")
+        const walk = (tags, parentId) => tags.forEach((tag, index) => {
+            tag.land_id = req.body.landId
+            tag.sorting = index
+            tag.parent_id = parentId
+
+            if (!('id' in tag)) {
+                insert.run([tag.land_id, tag.parent_id, tag.title, tag.sorting, tag.color])
+            } else {
+                update.run([tag.parent_id, tag.title, tag.sorting, tag.color, tag.id])
+            }
+
+            if (!('children' in tag)) {
+                tag.children = []
+            }
+
+            if (tag.children.length > 0) {
+                walk(tag.children, tag.id)
+            }
+        })
+
+        walk(req.body.tags, null)
+        res.json(true)
+    },
+
+    getTaggedContent: (req, res) => {
+        const sql = `SELECT
+                       *
+                     FROM taggedcontent
+                     WHERE expression_id = ?`;
+        db.all(sql, [req.query.expressionId], (err, rows) => {
+            const response = !err ? rows : [];
+        });
+    },
 };
 
 export default DataQueries;

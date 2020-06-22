@@ -4,6 +4,7 @@ import LandExplorer from '../LandExplorer/LandExplorer';
 import ExpressionExplorer from '../ExpressionExplorer/ExpressionExplorer';
 import DatabaseLocator from '../DatabaseLocator/DatabaseLocator';
 import './App.css';
+import 'react-sortable-tree/style.css';
 
 function App() {
     return (

@@ -17,7 +17,7 @@ html {
 .App {
     display: grid;
     height: 100vh;
-    grid-template-columns: 300px auto;
+    grid-template-columns: 400px auto;
     grid-template-rows: 60px auto;
     overflow: hidden;
 }
@@ -43,4 +43,15 @@ html {
     font-size: .7em;
     margin: 0;
     text-transform: uppercase;
+}
+
+.App-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.App-link:hover {
+    text-decoration: underline;
 }

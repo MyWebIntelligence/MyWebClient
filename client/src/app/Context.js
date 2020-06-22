@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import axios from 'axios';
-import querystring from 'querystring';
-import {delay} from "./Util";
+import qs from 'qs';
+import {delay, log} from "./Util";
 
 export const DEFAULT_RELEVANCE = 0;
 export const DEFAULT_DEPTH = 2;
@@ -30,7 +30,9 @@ export class ConfigContext extends Component {
             currentPage: 1,
             resultsPerPage: 50,
             sortColumn: 'id',
-            sortOrder: 1
+            sortOrder: 1,
+            tags: [],
+            taggedContent: [],
         };
         this.state = this.initialState;
     }
@@ -51,9 +53,10 @@ export class ConfigContext extends Component {
                             land: null,
                             expressions: [],
                             currentExpression: null,
+                            tags: [],
+                            taggedContent: [],
                         });
                         this.getLand(res.data[0].id);
-                        this.getExpressions(res.data[0].id);
                     });
                 }
                 this.setState({
@@ -77,10 +80,12 @@ export class ConfigContext extends Component {
                 currentDepth: DEFAULT_DEPTH,
                 resultCount: 0,
                 pageCount: 0,
-                currentPage: 1
+                currentPage: 1,
+                tags: [],
+                taggedContent: [],
             });
         } else {
-            const switchingLand = !(this.state.currentLand && this.state.currentLand.id === id);
+            const switchingLand = !(this.state.currentLand && (this.state.currentLand.id === id));
             const relevance = switchingLand ? DEFAULT_RELEVANCE : this.state.currentRelevance;
             const depth = switchingLand ? DEFAULT_DEPTH : this.state.currentDepth;
             const currentPage = switchingLand ? 1 : this.state.currentPage;
@@ -91,8 +96,8 @@ export class ConfigContext extends Component {
                 maxDepth: depth,
             };
 
-            axios.get(`/api/land?${querystring.stringify(params)}`).then(res => {
-                console.log(`Loaded land #${id}`);
+            axios.get(`/api/land?${qs.stringify(params)}`).then(res => {
+                log(`Loaded land #${id}`);
                 this.setState({
                     currentDomain: null,
                     currentLand: res.data,
@@ -112,6 +117,8 @@ export class ConfigContext extends Component {
                         minDepth: land.minDepth,
                         maxDepth: land.maxDepth,
                     });
+                    this.getExpressions(land.id)
+                    this.getTags(land.id)
                 }
             });
         }
@@ -127,9 +134,8 @@ export class ConfigContext extends Component {
             sortColumn: this.state.sortColumn,
             sortOrder: this.state.sortOrder,
         };
-        axios.get(`/api/expressions?${querystring.stringify(params)}`).then(res => {
-            console.log(`Loaded expressions from land #${landId}`);
-            this.getLand(landId);
+        axios.get(`/api/expressions?${qs.stringify(params)}`).then(res => {
+            log(`Loaded expressions from land #${landId}`);
             this.setState({expressions: res.data});
         });
     };
@@ -139,7 +145,7 @@ export class ConfigContext extends Component {
             this.setState({currentDomain: null});
         } else {
             axios.get(`/api/domain?id=${id}`).then(res => {
-                console.log(`Loaded domain #${id}`);
+                log(`Loaded domain #${id}`);
                 this.setState({currentDomain: res.data});
             });
         }
@@ -150,15 +156,16 @@ export class ConfigContext extends Component {
             this.setState({currentExpression: null});
         } else {
             axios.get(`/api/expression?id=${id}`).then(res => {
-                console.log(`Loaded expression #${id}`);
+                log(`Loaded expression #${id}`);
                 this.setState({currentExpression: res.data});
             });
         }
     };
 
     deleteExpression = id => {
-        axios.get(`/api/deleteExpression?id=${id}`).then(res => {
-            console.log(`Loaded expression #${id}`);
+        const ids = {id: id};
+        axios.get(`/api/deleteExpression?${qs.stringify(ids, { encode: false, arrayFormat: 'brackets' })}`).then(res => {
+            log(`Loaded expression #${id}`);
         });
     }
 
@@ -169,9 +176,9 @@ export class ConfigContext extends Component {
             maxDepth: this.state.currentDepth,
             id: id,
         };
-        axios.get(`/api/prev?${querystring.stringify(params)}`).then(res => {
+        axios.get(`/api/prev?${qs.stringify(params)}`).then(res => {
             if (res.data !== null) {
-                console.log(`Prev expression is #${res.data}`);
+                log(`Prev expression is #${res.data}`);
             }
             this.getExpression(res.data);
         });
@@ -184,9 +191,9 @@ export class ConfigContext extends Component {
             maxDepth: this.state.currentDepth,
             id: id,
         };
-        axios.get(`/api/next?${querystring.stringify(params)}`).then(res => {
+        axios.get(`/api/next?${qs.stringify(params)}`).then(res => {
             if (res.data !== null) {
-                console.log(`Next expression is #${res.data}`);
+                log(`Next expression is #${res.data}`);
             }
             this.getExpression(res.data);
         });
@@ -195,13 +202,13 @@ export class ConfigContext extends Component {
     setCurrentRelevance = value => {
         this.setState({currentRelevance: value}, () => {
             this.setCurrentPage(1);
-            this.getExpressions(this.state.currentLand.id);
+            this.getLand(this.state.currentLand.id);
         });
     };
 
     setCurrentDepth = value => {
         this.setState({currentDepth: value}, () => {
-            this.getExpressions(this.state.currentLand.id);
+            this.getLand(this.state.currentLand.id);
         });
     };
 
@@ -226,6 +233,7 @@ export class ConfigContext extends Component {
                     currentExpression: expression
                 }
             })
+            return res.data
         });
     };
 
@@ -233,9 +241,7 @@ export class ConfigContext extends Component {
         axios.post(`/api/readable`, {
             id: expressionId,
             content: content
-        }).then(res => {
-            return res.data
-        });
+        }).then(res => res.data);
     };
 
     setSortColumn = column => {
@@ -258,6 +264,67 @@ export class ConfigContext extends Component {
         });
     };
 
+    getTags = landId => {
+        if (landId === null) {
+            this.setState({ tags: [] })
+        } else {
+            axios.get(`/api/tags?${qs.stringify({landId: landId})}`).then(res => {
+                log(`Loaded tags from land #${landId}`);
+                this.setState({ tags: res.data });
+            });
+        }
+    };
+
+    setTags = tags => {
+        console.log("Setting tags")
+
+        const tagsHaveChanged = (a, b, d) => {
+            if (a.length !== b.length) {
+                console.log(`Size changed from ${a.length} to ${b.length}`)
+                return true
+            }
+
+            return a.some((tag, i) => {
+                if (!(i in b)) {
+                    console.log(`Tag removed in new`)
+                    return true
+                }
+
+                if (tag.id !== b[i].id) {
+                    console.log(`Sort changed from ${tag.id} to ${b[i].id}`)
+                    return true
+                }
+
+                if (tag.title !== b[i].title) {
+                    console.log(`Name changed from ${tag.title} to ${b[i].title}`)
+                    return true
+                }
+
+                return tagsHaveChanged(tag.children, b[i].children, d+1)
+            })
+        }
+
+        this.setState({ tags: tags })
+
+        if (tagsHaveChanged(this.state.tags, tags, 0)) {
+            axios.post(`/api/tags`, {
+                landId: this.state.currentLand.id,
+                tags: tags
+            }).then(res => this.getTags(this.state.currentLand.id))
+        }
+    }
+
+    getTaggedContent = expressionId => {
+        if (expressionId === null) {
+            this.setState({ taggedContent: [] })
+        } else {
+            axios.get(`/api/taggedContent?${qs.stringify({expressionId: expressionId})}`).then(res => {
+                log(`Loaded tagged content from expression #${expressionId}`);
+                this.setState({ taggedContent: res.data });
+            });
+        }
+    };
+
     render() {
         const state = {
             ...this.state,
@@ -277,6 +344,9 @@ export class ConfigContext extends Component {
             saveReadable: this.saveReadable,
             setSortColumn: this.setSortColumn,
             setSortOrder: this.setSortOrder,
+            getTags: this.getTags,
+            setTags: this.setTags,
+            getTaggedContent: this.getTaggedContent
         };
         return (
             <Context.Provider value={state}>

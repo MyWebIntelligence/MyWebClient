@@ -12,8 +12,6 @@ function FilterSlider({label, min, max, defaultValue, apply}) {
         setValue(defaultValue);
     }, [defaultValue]);
 
-    console.log(defaultValue);
-
     const handleChange = event => {
         setValue(event.target.value);
         apply(event.target.value);

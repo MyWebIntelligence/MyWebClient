@@ -17,23 +17,23 @@ function LandFilters() {
     };
 
     return (
-        <div className="my-3 panel">
+        <div>
             <div className="h5 my-3">Filters</div>
-            <Form>
-                <FilterSlider label="Minimum relevance"
-                              min={context.minRelevance}
-                              max={context.maxRelevance}
-                              defaultValue={context.currentRelevance}
-                              apply={onChangeRelevance}/>
+            <div className="py-3 panel">
+                <Form>
+                    <FilterSlider label="Minimum relevance"
+                                  min={context.minRelevance}
+                                  max={context.maxRelevance}
+                                  defaultValue={context.currentRelevance}
+                                  apply={onChangeRelevance}/>
 
-                <FilterSlider label="Maximum depth"
-                              min={context.minDepth}
-                              max={context.maxDepth}
-                              defaultValue={context.currentDepth}
-                              apply={onChangeDepth}/>
-            </Form>
-            <hr/>
-            <p className="text-muted">{context.currentLand.description}</p>
+                    <FilterSlider label="Maximum depth"
+                                  min={context.minDepth}
+                                  max={context.maxDepth}
+                                  defaultValue={context.currentDepth}
+                                  apply={onChangeDepth}/>
+                </Form>
+            </div>
         </div>
     );
 }
