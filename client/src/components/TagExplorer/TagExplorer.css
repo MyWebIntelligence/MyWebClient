@@ -1,0 +1,26 @@
+.TagExplorer-tagTree {
+    height: 400px;
+}
+
+.TagExplorer-nodeControl {
+    background: none;
+    border: 0;
+    color: #007bff;
+    cursor: pointer;
+    margin-left: .25rem;
+    padding: 0;
+}
+
+.TagExplorer-nodeControl:hover {
+    color: #0056b3;
+}
+
+.rst__lineHalfHorizontalRight::before, .rst__lineFullVertical::after, .rst__lineHalfVerticalTop::after, .rst__lineHalfVerticalBottom::after {
+    background-color: #ced4da!important;
+}
+
+.rst__lineHalfHorizontalRight::before, .rst__lineFullVertical::after, .rst__lineHalfVerticalTop::after, .rst__lineHalfVerticalBottom::after {
+    position: absolute;
+    content: '';
+    background-color: #ced4da!important;
+}
