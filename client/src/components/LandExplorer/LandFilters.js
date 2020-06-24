@@ -9,11 +9,11 @@ function LandFilters() {
     const context = useContext(Context);
 
     const onChangeRelevance = (value) => {
-        delay(context.setCurrentRelevance, parseInt(value));
+        delay(400, context.setCurrentRelevance, parseInt(value));
     };
 
     const onChangeDepth = (value) => {
-        delay(context.setCurrentDepth, parseInt(value));
+        delay(400, context.setCurrentDepth, parseInt(value));
     };
 
     return (

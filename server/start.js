@@ -82,6 +82,11 @@ app.get('/api/taggedContent', (req, res) => {
     DataQueries.getTaggedContent(req, res)
 });
 
+app.post('/api/tagContent', (req, res) => {
+    log(`Saving tagged content`);
+    DataQueries.setTaggedContent(req, res)
+});
+
 /*
 app.post('/api/setdb', (req, res) => {
     log(req.body);

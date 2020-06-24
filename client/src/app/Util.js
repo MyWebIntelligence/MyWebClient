@@ -1,10 +1,10 @@
 let timer = null;
 
-const delay = (callback, arg) => {
+const delay = (time, callback, arg) => {
     clearTimeout(timer);
     timer = setTimeout((value) => {
         callback(value);
-    }, 400, arg);
+    }, time, arg);
 };
 
 const log = message => {

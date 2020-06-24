@@ -1,4 +1,4 @@
-import React, {useContext} from "react";
+import React, {useCallback, useContext, useEffect} from "react";
 import {Context} from '../../app/Context';
 import './Domain.css';
 import Row from "react-bootstrap/Row";
@@ -7,6 +7,26 @@ import Button from "react-bootstrap/Button";
 
 function Domain() {
     const context = useContext(Context);
+
+    const keyboardControl = useCallback(event => {
+        const notFocused = document.querySelectorAll('input:focus, textarea:focus').length === 0
+        const unloadedExpression = context.currentExpression === null
+        if (notFocused && unloadedExpression) {
+            switch (event.keyCode) {
+                case 27: context.getDomain(null)
+                    break
+                default:
+                    break
+            }
+        }
+    }, [context])
+
+    useEffect(() => {
+        document.addEventListener("keydown", keyboardControl, false)
+        return () => {
+            document.removeEventListener("keydown", keyboardControl, false)
+        }
+    }, [context])
 
     return <section className={"Domain" + (context.currentDomain ? " d-block" : "")}>
         <Row>
@@ -25,8 +45,10 @@ function Domain() {
 
         <p className="lead my-5">{context.currentDomain.description}</p>
 
-        <p>{context.currentDomain.expressionCount} expressions registered from this domain</p>
+        <h5>Expressions</h5>
+        <p>{context.currentDomain.expressionCount} expressions registered in this domain</p>
 
+        <h5>keywords</h5>
         <p>{context.currentDomain.keywords}</p>
     </section>
 }
