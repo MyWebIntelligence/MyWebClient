@@ -1,5 +1,6 @@
-$row-padding: 6px;
-$light-grey: #ced4da;
+$color-light: #ced4da;
+$color-primary: #007bff;
+$row-padding: 3px;
 
 .rowWrapper {
   padding: $row-padding $row-padding $row-padding 0;
@@ -25,7 +26,7 @@ $light-grey: #ced4da;
   }
 
   &::before {
-    background-color: lightblue;
+    background-color: lighten($color-primary, 30%);
     border: 3px dashed white;
     content: '';
     position: absolute;
@@ -52,7 +53,7 @@ $light-grey: #ced4da;
  * Nodes matching the search conditions are highlighted
  */
 .rowSearchMatch {
-  outline: solid 3px #0080FF;
+  outline: solid 3px $color-primary;
 }
 
 /**
@@ -71,11 +72,10 @@ $light-grey: #ced4da;
   @extend %rowItem;
   position: relative;
   height: 100%;
-  border: 1px solid $light-grey;
+  border: 1px solid $color-light;
   border-left: none;
   padding: 0 5px 0 5px;
   border-radius: 0 .25rem .25rem 0;
-  min-width: 230px;
   flex: 1 0 auto;
   display: flex;
   align-items: center;
@@ -89,10 +89,13 @@ $light-grey: #ced4da;
 
   input {
     border: 1px solid transparent;
+    border-radius: .25rem;
     font-weight: 700;
+    width: 120px;
 
-    &:hover {
-      border: 1px solid #007bff;
+    &:hover, &:focus {
+      border: 1px solid $color-primary;
+      outline: none;
     }
   }
 }
@@ -109,7 +112,7 @@ $light-grey: #ced4da;
   height: 100%;
   width: 32px;
   background: #D9D9D9 url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MiIgaGVpZ2h0PSI0MiI+PGcgc3Ryb2tlPSIjRkZGIiBzdHJva2Utd2lkdGg9IjIuOSIgPjxwYXRoIGQ9Ik0xNCAxNS43aDE0LjQiLz48cGF0aCBkPSJNMTQgMjEuNGgxNC40Ii8+PHBhdGggZD0iTTE0IDI3LjFoMTQuNCIvPjwvZz4KPC9zdmc+') no-repeat center;
-  border: 1px solid $light-grey;
+  border: 1px solid $color-light;
   cursor: move;
   z-index: 1;
 }
@@ -195,7 +198,7 @@ $light-grey: #ced4da;
   border: none;
   position: absolute;
   border-radius: 100%;
-  box-shadow: 0 0 0 1px $light-grey;
+  box-shadow: 0 0 0 1px $color-light;
   width: 16px;
   height: 16px;
   top: 50%;
@@ -204,7 +207,7 @@ $light-grey: #ced4da;
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 1px $light-grey, 0 0 1px 3px #83BEF9;
+    box-shadow: 0 0 0 1px $color-light, 0 0 1px 3px $color-primary;
   }
 
   &:hover:not(:active) {
@@ -271,7 +274,7 @@ $light-grey: #ced4da;
   &::after {
     content: '';
     position: absolute;
-    background-color: $light-grey;
+    background-color: $color-light;
     width: 1px;
     left: 50%;
     bottom: 0;
