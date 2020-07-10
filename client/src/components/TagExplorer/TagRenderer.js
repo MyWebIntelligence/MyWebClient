@@ -163,8 +163,8 @@ TagRenderer.propTypes = {
     // Drag source
     connectDragPreview: PropTypes.func.isRequired,
     connectDragSource: PropTypes.func.isRequired,
-    startDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
-    endDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
+    //startDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
+    //endDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
     isDragging: PropTypes.bool.isRequired,
     draggedNode: PropTypes.object,
     // Drop target

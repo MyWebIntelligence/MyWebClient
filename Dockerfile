@@ -2,8 +2,11 @@ FROM node:12.16.3-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache git
-RUN git clone https://github.com/MyWebIntelligence/MyWebClient.git .
-RUN yarn install && cd client && yarn install && cd ..
+COPY . .
+RUN yarn install
 
+WORKDIR /app/client
+RUN yarn install
+
+WORKDIR /app
 CMD ["yarn", "standalone"]

@@ -102,15 +102,15 @@ function ExpressionExplorer() {
                         </h2>
                     </Col>
                     <Col md="6" className="d-flex align-items-center justify-content-end paginator">
-                        <a className="mx-2 text-primary" onClick={setPrevPage}>
+                        <span className="mx-2 text-primary" onClick={setPrevPage}>
                             <i className="fas fa-arrow-left"/>
-                        </a>
+                        </span>
 
                         <span className="h5 mb-1">{context.currentPage}/{context.pageCount}</span>
 
-                        <a className="mx-2 text-primary" onClick={setNextPage}>
+                        <span className="mx-2 text-primary" onClick={setNextPage}>
                             <i className="fas fa-arrow-right"/>
-                        </a>
+                        </span>
                     </Col>
                 </Row>
 
@@ -140,23 +140,30 @@ function ExpressionExplorer() {
                                 context.setSortColumn('relevance')
                             }}>{sortHint('relevance', 'Relevance')}</span>
                         </th>
-                        <th style={{width: "40px"}}>&nbsp</th>
+                        <th style={{width: "100px"}} className="text-center">
+                            <span onClick={_ => {
+                                context.setSortColumn('tagCount')
+                            }}>{sortHint('tagCount', 'Tags')}</span>
+                        </th>
+                        <th style={{width: "40px"}}/>
                     </tr>
                     </thead>
+
                     <tbody>
                     {context.expressions.map((expression, index) =>
-                        <tr key={index}>
+                        <tr key={index} onClick={_ => { context.getExpression(expression.id) }}>
                             <td style={{width: "40px"}} className="text-center">
-                                <input type="checkbox" className="expressionSelect" onClick={checkSelected}
+                                <input type="checkbox" className="expressionSelect" onClick={ event => { event.stopPropagation(); checkSelected() } }
                                        data-expressionid={expression.id}/>
                             </td>
                             <td style={{width: "75px"}} className="text-center">{expression.id}</td>
                             <td><span className="hover-pill"
                                       onClick={_ => context.getExpression(expression.id)}>{expression.title}</span></td>
                             <td className="text-center"><span className="hover-pill"
-                                                              onClick={_ => context.getDomain(expression.domainId)}>{expression.domainName}</span>
+                                                              onClick={ event => { event.stopPropagation(); context.getDomain(expression.domainId) }}>{expression.domainName}</span>
                             </td>
                             <td style={{width: "100px"}} className="text-center">{expression.relevance}</td>
+                            <td style={{width: "100px"}} className="text-center">{expression.tagCount}</td>
                             <td style={{width: "40px"}} className="text-center">
                                 <a href={expression.url} target="_blank" rel="noopener noreferrer">
                                     <i className="fas fa-external-link-alt"/>
@@ -168,6 +175,7 @@ function ExpressionExplorer() {
                         <td colSpan="5"><h3 className="text-muted">No results</h3></td>
                     </tr>}
                     </tbody>
+
                     <tfoot className={context.isLoadingExpressions ? 'd-block' : 'd-none'}>
                     <tr>
                         <td>

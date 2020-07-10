@@ -82,6 +82,11 @@ app.get('/api/taggedContent', (req, res) => {
     DataQueries.getTaggedContent(req, res)
 });
 
+app.get('/api/deleteTaggedContent', (req, res) => {
+    log(`Deleting tagged content #${req.query.id}`);
+    DataQueries.deleteTaggedContent(req, res)
+});
+
 app.post('/api/tagContent', (req, res) => {
     log(`Saving tagged content`);
     DataQueries.setTaggedContent(req, res)

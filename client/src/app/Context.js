@@ -339,6 +339,12 @@ export class ConfigContext extends Component {
         }
     }
 
+    deleteTaggedContent = taggedContentId => {
+        axios.get(`/api/deleteTaggedContent?id=${taggedContentId}`).then(res => {
+            this.getTaggedContent(this.state.currentExpression.id)
+        })
+    }
+
     tagContent = (tagId, expressionId, text, start, end) => {
         axios.post('/api/tagContent', {
             tagId: tagId,
@@ -377,6 +383,7 @@ export class ConfigContext extends Component {
             setTags: this.setTags,
             getTaggedContent: this.getTaggedContent,
             tagContent: this.tagContent,
+            deleteTaggedContent: this.deleteTaggedContent,
         }
         return (
             <Context.Provider value={state}>
