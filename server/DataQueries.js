@@ -83,13 +83,16 @@ const DataQueries = {
                             e.http_status AS httpStatus,
                             e.relevance,
                             d.id          AS domainId,
-                            d.name        AS domainName
+                            d.name        AS domainName,
+                            COUNT(t.id) AS tagCount
                      FROM expression AS e
-                              JOIN domain AS d ON d.id = e.domain_id
+                     JOIN domain AS d ON d.id = e.domain_id
+                     LEFT JOIN taggedcontent AS t ON t.expression_id = e.id
                      WHERE land_id = ?
                        AND e.http_status = 200
                        AND e.relevance >= ?
                        AND e.depth <= ?
+                     GROUP BY e.id
                      ORDER BY ${column} ${order}
                      LIMIT ?, ?`
         db.all(sql, params, (err, rows) => {
@@ -339,6 +342,15 @@ const DataQueries = {
         db.all(sql, [req.query.expressionId], (err, rows) => {
             const response = !err ? rows : []
             res.json(response)
+        })
+    },
+
+    deleteTaggedContent: (req, res) => {
+        const sql = `DELETE
+                     FROM taggedContent
+                     WHERE id = ?`
+        db.run(sql, [req.query.id], err => {
+            res.json(!err)
         })
     },
 

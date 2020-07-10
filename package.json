@@ -1,6 +1,7 @@
 {
   "name": "mwi-client-react",
   "version": "1.0.0",
+  "license": "MIT",
   "scripts": {
     "client": "cd client && yarn start",
     "server": "nodemon --exec babel-node server/start.js",

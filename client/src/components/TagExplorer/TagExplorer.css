@@ -25,3 +25,7 @@
     content: '';
     background-color: #ced4da!important;
 }
+
+.rst__placeholder {
+    max-width: 100%!important;
+}
