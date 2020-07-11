@@ -14,6 +14,7 @@ function DatabaseLocator() {
         setTimeout(() => {
             context.setDb(localStorage.getItem('dbFile'));
         }, 1000);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     let stateClass = 'text-danger fas fa-exclamation-circle';

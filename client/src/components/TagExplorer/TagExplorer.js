@@ -17,77 +17,80 @@ function TagExplorer() {
     }, [context.tags])
 
     return <div>
-        <div className="h5 my-3">
-            Tags
-            <div className="float-right">
+        <div className="h5 my-3">Tags</div>
+
+        <div className="panel py-2">
+            <div className="pt-2">
                 <Button onClick={() => context.setTags([...context.tags, newTag])} size="sm" className="mr-2">Add new</Button>
                 <Button onClick={_ => context.getTaggedContent({landId: context.currentLand.id})} size="sm" className="mr-2">View tagged content</Button>
             </div>
-        </div>
 
-         <div className="TagExplorer-tagTree">
-            <SortableTree
-                treeData={treeData}
-                onChange={tags => {
-                    context.setTags(tags)
-                }}
-                scaffoldBlockPxWidth={26}
-                rowHeight={36}
-                //treeNodeRenderer={TreeRenderer}
-                nodeContentRenderer={TagRenderer}
-                generateNodeProps={({node, path}) => ({
-                    title: <input
-                        value={node.title}
-                        onChange={
-                            event => {
-                                const title = event.target.value
-                                setTreeData(changeNodeAtPath({
-                                    treeData: [...treeData],
-                                    path,
-                                    getNodeKey,
-                                    newNode: {...node, title},
-                                }))
+            <hr/>
+
+            <div className="TagExplorer-tagTree">
+                <SortableTree
+                    treeData={treeData}
+                    onChange={tags => {
+                        context.setTags(tags)
+                    }}
+                    scaffoldBlockPxWidth={26}
+                    rowHeight={36}
+                    //treeNodeRenderer={TreeRenderer}
+                    nodeContentRenderer={TagRenderer}
+                    generateNodeProps={({node, path}) => ({
+                        title: <input
+                            value={node.title}
+                            onChange={
+                                event => {
+                                    const title = event.target.value
+                                    setTreeData(changeNodeAtPath({
+                                        treeData: [...treeData],
+                                        path,
+                                        getNodeKey,
+                                        newNode: {...node, title},
+                                    }))
+                                }
                             }
-                        }
-                        onBlur={_ => context.setTags(treeData)}
-                    />,
-                    buttons: [
-                        <OverlayTrigger placement="right" overlay={
-                            <Tooltip id={`addTag${node.id}`}>{`Add tag in ${node.title}`}</Tooltip>
-                        }>
-                            <button className="TagExplorer-nodeControl"
-                                    onClick={() =>
-                                        context.setTags(addNodeUnderParent({
-                                                treeData: treeData,
-                                                parentKey: path[path.length - 1],
-                                                expandParent: true,
-                                                getNodeKey,
-                                                newNode: newTag
-                                            }).treeData
-                                        )
-                                    }>
-                                <i className="fas fa-plus-circle"/>
-                            </button>
-                        </OverlayTrigger>,
-                        <OverlayTrigger placement="right" overlay={
-                            <Tooltip id={`removeTag${node.id}`}>{`Remove tag ${node.title}`}</Tooltip>
-                        }>
-                            <button className="TagExplorer-nodeControl"
-                                    onClick={() => {
-                                        if (window.confirm("Are you sure to delete this tag?")) {
-                                            context.setTags(removeNodeAtPath({
-                                                treeData: treeData,
-                                                path,
-                                                getNodeKey,
-                                            }))
-                                        }
-                                    }}>
-                                <i className="fas fa-minus-circle"/>
-                            </button>
-                        </OverlayTrigger>,
-                    ],
-                })}
-            />
+                            onBlur={_ => context.setTags(treeData)}
+                        />,
+                        buttons: [
+                            <OverlayTrigger placement="right" overlay={
+                                <Tooltip id={`addTag${node.id}`}>{`Add tag in ${node.title}`}</Tooltip>
+                            }>
+                                <button className="TagExplorer-nodeControl"
+                                        onClick={() =>
+                                            context.setTags(addNodeUnderParent({
+                                                    treeData: treeData,
+                                                    parentKey: path[path.length - 1],
+                                                    expandParent: true,
+                                                    getNodeKey,
+                                                    newNode: newTag
+                                                }).treeData
+                                            )
+                                        }>
+                                    <i className="fas fa-plus-circle"/>
+                                </button>
+                            </OverlayTrigger>,
+                            <OverlayTrigger placement="right" overlay={
+                                <Tooltip id={`removeTag${node.id}`}>{`Remove tag ${node.title}`}</Tooltip>
+                            }>
+                                <button className="TagExplorer-nodeControl"
+                                        onClick={() => {
+                                            if (window.confirm("Are you sure to delete this tag?")) {
+                                                context.setTags(removeNodeAtPath({
+                                                    treeData: treeData,
+                                                    path,
+                                                    getNodeKey,
+                                                }))
+                                            }
+                                        }}>
+                                    <i className="fas fa-minus-circle"/>
+                                </button>
+                            </OverlayTrigger>,
+                        ],
+                    })}
+                />
+            </div>
         </div>
     </div>
 }

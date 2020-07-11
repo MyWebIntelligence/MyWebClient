@@ -29,11 +29,11 @@ function Expression() {
                     saveBeforeQuit()
                     context.getExpression(null)
                     break
-                case 37: // LEFT Previous expression
+                case 37: // ← Previous expression
                     saveBeforeQuit()
                     context.getPrevExpression(context.currentExpression.id, context.currentExpression.landId)
                     break
-                case 39: // Right Next expression
+                case 39: // → Next expression
                     saveBeforeQuit()
                     context.getNextExpression(context.currentExpression.id, context.currentExpression.landId)
                     break
@@ -50,6 +50,7 @@ function Expression() {
                     break
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [context.currentExpression, contentChanged])
 
     useEffect(() => {
@@ -57,7 +58,7 @@ function Expression() {
         return () => {
             document.removeEventListener("keydown", keyboardControl, false)
         }
-    }, [context.currentExpression, contentChanged])
+    }, [keyboardControl])
 
     const saveBeforeQuit = _ => {
         if (contentChanged && window.confirm("Would you want to save your changes before quit?")) {
@@ -190,7 +191,11 @@ function Expression() {
             </Col>
         </Row>
 
-        <p className="lead my-4">{context.currentExpression.description}</p>
+        <Row>
+            <Col md="8">
+                <p className="lead my-4">{context.currentExpression.description}</p>
+            </Col>
+        </Row>
 
         <Container fluid className="p-0">
             <Row>

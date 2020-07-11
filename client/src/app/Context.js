@@ -30,7 +30,7 @@ export class ConfigContext extends Component {
             pageCount: 0,
             currentPage: 1,
             resultsPerPage: 50,
-            sortColumn: 'id',
+            sortColumn: 'e.id',
             sortOrder: 1,
             tags: [],
             taggedContent: [],
