@@ -1,6 +1,6 @@
 import sqlite from "sqlite3"
 import Mercury from "@postlight/mercury-parser"
-import {log, placeholders} from "../client/src/app/Util"
+import {log, placeholders} from "../../client/src/app/Util"
 
 let db
 

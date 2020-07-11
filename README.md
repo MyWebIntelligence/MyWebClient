@@ -64,11 +64,11 @@ MyWebClient> yarn standalone
 ## Installation
 
 If not already built (check with `docker images` command), or you want to recreate docker image from fresh sources, go 
-to project directory and build image from Dockerfile.
+to project directory and build image from Dockerfile, automatically named after code version.
 
 ```
 > cd MyWebClient
-MyWebClient> docker build -t mwiclient .
+MyWebClient> docker build -t mwiclient:$(git rev-parse --short HEAD) .
 ```
 
 Run image from project directory, with port mapping and volume mount.
@@ -76,7 +76,7 @@ The path of shared folder may change whether you run docker via Docker CLI, Dock
 Mount path defines what you'll type in application database locator, typically `/data/mwi.db`.
 
 ```
-> docker run -p80:3000 --name mwiclient -v /path/to/hosted/mywi/data:/data mwiclient
+> docker run -p80:3000 --name mwiclient -v /path/to/hosted/mywi/data:/data mwiclient:<revision_tag>
 ```
 
 Now, you should be able to browse application at your Docker public IP address (given your Docker configuration)
@@ -88,13 +88,3 @@ Show running containers to know current container id
 ```
 > docker ps
 ```
-
-Log in running container to update project (server and client).
-
-```
-> docker exec -it <container-id> /bin/sh
-/# git pull
-/# yarn upgrade
-/# cd client
-/client# yarn upgrade
-``` 

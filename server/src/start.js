@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import DataQueries from './DataQueries';
-import {log} from '../client/src/app/Util';
+import {log} from '../../client/src/app/Util';
 
 const app = express();
 app.use(express.json())
