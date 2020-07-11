@@ -30,18 +30,20 @@ function ExpressionExplorer() {
                     break
                 case 39: setNextPage()
                     break
+                case 68: dropSelected()
+                    break
                 default:
                     break
             }
         }
-    }, [context])
+    }, [context, selected])
 
     useEffect(() => {
         document.addEventListener("keydown", keyboardControl, false)
         return () => {
             document.removeEventListener("keydown", keyboardControl, false)
         }
-    }, [context])
+    }, [context, selected])
 
     const groupSelect = event => {
         setSelected(event.target.checked)
@@ -64,7 +66,7 @@ function ExpressionExplorer() {
     }
 
     const dropSelected = _ => {
-        if (window.confirm("Are you sure to drop selected expressions?")) {
+        if (selected && window.confirm("Are you sure to drop selected expressions?")) {
             const cbs = document.querySelectorAll(".expressionSelect:checked")
             let ids = []
             cbs.forEach(cb => {
@@ -98,7 +100,7 @@ function ExpressionExplorer() {
                             <span className="pr-2">{context.currentLand.name}</span>
                             <Badge pill variant="primary">{context.currentLand.expressionCount}</Badge>
                             <Button variant="outline-danger" className="btn-sm mx-2" disabled={!selected}
-                                    onClick={dropSelected}>Drop selection</Button>
+                                    onClick={dropSelected}><u>D</u>rop selection</Button>
                         </h2>
                     </Col>
                     <Col md="6" className="d-flex align-items-center justify-content-end paginator">
@@ -118,7 +120,7 @@ function ExpressionExplorer() {
                     <thead>
                     <tr>
                         <th style={{width: "40px"}} className="text-center">
-                            <input type="checkbox" onClick={groupSelect}/>
+                            <input type="checkbox" onClick={event => { groupSelect(event); event.target.blur() }}/>
                         </th>
                         <th style={{width: "75px"}} className="text-center">
                             <span onClick={_ => {
@@ -153,7 +155,7 @@ function ExpressionExplorer() {
                     {context.expressions.map((expression, index) =>
                         <tr key={index} onClick={_ => { context.getExpression(expression.id) }}>
                             <td style={{width: "40px"}} className="text-center">
-                                <input type="checkbox" className="expressionSelect" onClick={ event => { event.stopPropagation(); checkSelected() } }
+                                <input type="checkbox" className="expressionSelect" onClick={ event => { event.stopPropagation(); checkSelected(); event.target.blur() } }
                                        data-expressionid={expression.id}/>
                             </td>
                             <td style={{width: "75px"}} className="text-center">{expression.id}</td>
