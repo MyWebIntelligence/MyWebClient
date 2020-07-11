@@ -21,7 +21,7 @@ function TagExplorer() {
             Tags
             <div className="float-right">
                 <Button onClick={() => context.setTags([...context.tags, newTag])} size="sm" className="mr-2">Add new</Button>
-                <Button onClick={_ => console.log("Show tagged content")} size="sm" className="mr-2">View tagged content</Button>
+                <Button onClick={_ => context.getTaggedContent({landId: context.currentLand.id})} size="sm" className="mr-2">View tagged content</Button>
             </div>
         </div>
 

@@ -105,7 +105,6 @@ function Expression() {
             context.getNextExpression(expressionId, landId)
             context.deleteExpression(expressionId)
             context.getLand(context.currentLand.id)
-
             context.getExpressions(context.currentLand.id)
         }
     }
@@ -159,7 +158,6 @@ function Expression() {
                 data.push(tagContent)
             }
         })
-        console.log(data)
         return data
     }
 
@@ -176,7 +174,7 @@ function Expression() {
                     <p><small><a href={context.currentExpression.url} target="_blank" rel="noopener noreferrer">{context.currentExpression.url}</a></small></p>
                 </div>
             </Col>
-            <Col md="4" className="d-flex align-items-center justify-content-end">
+            <Col md="4" className="d-flex align-items-start justify-content-end">
                 <Button size="sm" className="rounded-pill mx-1"
                         onClick={_ => context.getPrevExpression(context.currentExpression.id, context.currentExpression.landId)}>
                     <i className="fas fa-arrow-left"/>
@@ -273,11 +271,11 @@ function Expression() {
                         <div className="panel taggedContentExplorer py-2 my-3">
                             <ul>
                                 {categorizeTaggedContent().map((tag, i) => <li key={i}>
-                                    <h6>{tag.name}</h6>
+                                    <h6 className="App-objtype">{tag.name}</h6>
                                     <ul>
                                         {tag.contents.map((content, j) => <li key={j}>
                                             <i className="fas fa-times text-danger float-right" onClick={_ => deleteTaggedContent(content.id)}/>
-                                            <p className="App-text-excerpt">{content.text}</p>
+                                            <p className="App-text-excerpt mb-1">{content.text}</p>
                                         </li>)}
                                     </ul>
                                 </li>)}

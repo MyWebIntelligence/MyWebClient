@@ -157,12 +157,12 @@ export class ConfigContext extends Component {
 
     getExpression = id => {
         if (id === null) {
-            this.setState({currentExpression: null})
+            this.setState({ currentExpression: null })
         } else {
             axios.get(`/api/expression?id=${id}`).then(res => {
                 log(`Loaded expression #${id}`)
-                this.setState({currentExpression: res.data})
-                this.getTaggedContent(id)
+                this.setState({ currentExpression: res.data })
+                this.getTaggedContent({ expressionId: id })
             })
         }
     }
@@ -177,10 +177,12 @@ export class ConfigContext extends Component {
 
     getPrevExpression = (id, landId) => {
         const params = {
+            id: id,
             landId: landId,
             minRelevance: this.state.currentRelevance,
             maxDepth: this.state.currentDepth,
-            id: id,
+            sortColumn: this.state.sortColumn,
+            sortOrder: this.state.sortOrder,
         }
         axios.get(`/api/prev?${qs.stringify(params)}`).then(res => {
             if (res.data !== null) {
@@ -192,10 +194,12 @@ export class ConfigContext extends Component {
 
     getNextExpression = (id, landId) => {
         const params = {
+            id: id,
             landId: landId,
             minRelevance: this.state.currentRelevance,
             maxDepth: this.state.currentDepth,
-            id: id,
+            sortColumn: this.state.sortColumn,
+            sortOrder: this.state.sortOrder,
         }
         axios.get(`/api/next?${qs.stringify(params)}`).then(res => {
             if (res.data !== null) {
@@ -285,27 +289,25 @@ export class ConfigContext extends Component {
     }
 
     setTags = tags => {
-        console.log("Setting tags")
-
         const tagsHaveChanged = (a, b, d) => {
             if (a.length !== b.length) {
-                console.log(`Size changed from ${a.length} to ${b.length}`)
+                log(`Size changed from ${a.length} to ${b.length}`)
                 return true
             }
 
             return a.some((tag, i) => {
                 if (!(i in b)) {
-                    console.log(`Tag removed in new`)
+                    log(`Tag removed from tree`)
                     return true
                 }
 
                 if (tag.id !== b[i].id) {
-                    console.log(`Sort changed from ${tag.id} to ${b[i].id}`)
+                    log(`Sort changed from ${tag.id} to ${b[i].id}`)
                     return true
                 }
 
                 if (tag.title !== b[i].title) {
-                    console.log(`Name changed from ${tag.title} to ${b[i].title}`)
+                    log(`Name changed from ${tag.title} to ${b[i].title}`)
                     return true
                 }
 
@@ -313,27 +315,29 @@ export class ConfigContext extends Component {
             })
         }
 
-        this.setState({ tags: tags })
-
         if (tagsHaveChanged(this.state.tags, tags, 0)) {
             axios.post(`/api/tags`, {
                 landId: this.state.currentLand.id,
                 tags: tags
             }).then(res => {
+                log("Tags saved")
                 this.getTags(this.state.currentLand.id)
                 if (this.state.currentExpression !== null) {
-                    this.getTaggedContent(this.state.currentExpression.id)
+                    this.getTaggedContent({ expressionId: this.state.currentExpression.id })
                 }
             })
         }
+
+        this.setState({ tags: tags })
     }
 
-    getTaggedContent = expressionId => {
-        if (expressionId === null) {
+    getTaggedContent = scope => {
+        if (scope === null) {
             this.setState({ taggedContent: [] })
         } else {
-            axios.get(`/api/taggedContent?${qs.stringify({expressionId: expressionId})}`).then(res => {
-                log(`Loaded tagged content from expression #${expressionId}`)
+            const param = qs.stringify(scope)
+            axios.get(`/api/taggedContent?${param}`).then(res => {
+                log(`Loaded tagged content for ${param}`)
                 this.setState({ taggedContent: res.data })
             })
         }
@@ -341,7 +345,7 @@ export class ConfigContext extends Component {
 
     deleteTaggedContent = taggedContentId => {
         axios.get(`/api/deleteTaggedContent?id=${taggedContentId}`).then(res => {
-            this.getTaggedContent(this.state.currentExpression.id)
+            this.getTaggedContent({ expressionId: this.state.currentExpression.id })
         })
     }
 
@@ -355,7 +359,7 @@ export class ConfigContext extends Component {
         }).then(res => {
             if (res.data === true) {
                 log(`Saved tagged content`)
-                this.getTaggedContent(expressionId)
+                this.getTaggedContent({ expressionId: expressionId })
             }
         })
     }
