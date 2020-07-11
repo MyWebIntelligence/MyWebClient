@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import axios from 'axios'
 import qs from 'qs'
-import {delay, log} from "./Util"
+import { delay } from "./Util"
 
 export const DEFAULT_RELEVANCE = 0
 export const DEFAULT_DEPTH = 2
@@ -98,7 +98,7 @@ export class ConfigContext extends Component {
             }
 
             axios.get(`/api/land?${qs.stringify(params)}`).then(res => {
-                log(`Loaded land #${id}`)
+                console.log(`Loaded land #${id}`)
                 this.setState({
                     currentDomain: null,
                     currentLand: res.data,
@@ -136,7 +136,7 @@ export class ConfigContext extends Component {
             sortOrder: this.state.sortOrder,
         }
         axios.get(`/api/expressions?${qs.stringify(params)}`).then(res => {
-            log(`Loaded expressions from land #${landId}`)
+            console.log(`Loaded expressions from land #${landId}`)
             this.setState({
                 isLoadingExpressions: false,
                 expressions: res.data
@@ -149,7 +149,7 @@ export class ConfigContext extends Component {
             this.setState({currentDomain: null})
         } else {
             axios.get(`/api/domain?id=${id}`).then(res => {
-                log(`Loaded domain #${id}`)
+                console.log(`Loaded domain #${id}`)
                 this.setState({currentDomain: res.data})
             })
         }
@@ -160,7 +160,7 @@ export class ConfigContext extends Component {
             this.setState({ currentExpression: null })
         } else {
             axios.get(`/api/expression?id=${id}`).then(res => {
-                log(`Loaded expression #${id}`)
+                console.log(`Loaded expression #${id}`)
                 this.setState({ currentExpression: res.data })
                 this.getTaggedContent({ expressionId: id })
             })
@@ -171,7 +171,7 @@ export class ConfigContext extends Component {
         this.setState({ isLoadingExpressions: true })
         const ids = {id: id}
         axios.get(`/api/deleteExpression?${qs.stringify(ids, { encode: false, arrayFormat: 'brackets' })}`).then(res => {
-            log(`Loaded expression #${id}`)
+            console.log(`Loaded expression #${id}`)
         })
     }
 
@@ -186,7 +186,7 @@ export class ConfigContext extends Component {
         }
         axios.get(`/api/prev?${qs.stringify(params)}`).then(res => {
             if (res.data !== null) {
-                log(`Prev expression is #${res.data}`)
+                console.log(`Prev expression is #${res.data}`)
             }
             this.getExpression(res.data)
         })
@@ -203,7 +203,7 @@ export class ConfigContext extends Component {
         }
         axios.get(`/api/next?${qs.stringify(params)}`).then(res => {
             if (res.data !== null) {
-                log(`Next expression is #${res.data}`)
+                console.log(`Next expression is #${res.data}`)
             }
             this.getExpression(res.data)
         })
@@ -282,7 +282,7 @@ export class ConfigContext extends Component {
             this.setState({ tags: [] })
         } else {
             axios.get(`/api/tags?${qs.stringify({landId: landId})}`).then(res => {
-                log(`Loaded tags from land #${landId}`)
+                console.log(`Loaded tags from land #${landId}`)
                 this.setState({ tags: res.data })
             })
         }
@@ -291,23 +291,23 @@ export class ConfigContext extends Component {
     setTags = tags => {
         const tagsHaveChanged = (a, b, d) => {
             if (a.length !== b.length) {
-                log(`Size changed from ${a.length} to ${b.length}`)
+                console.log(`Size changed from ${a.length} to ${b.length}`)
                 return true
             }
 
             return a.some((tag, i) => {
                 if (!(i in b)) {
-                    log(`Tag removed from tree`)
+                    console.log(`Tag removed from tree`)
                     return true
                 }
 
                 if (tag.id !== b[i].id) {
-                    log(`Sort changed from ${tag.id} to ${b[i].id}`)
+                    console.log(`Sort changed from ${tag.id} to ${b[i].id}`)
                     return true
                 }
 
                 if (tag.title !== b[i].title) {
-                    log(`Name changed from ${tag.title} to ${b[i].title}`)
+                    console.log(`Name changed from ${tag.title} to ${b[i].title}`)
                     return true
                 }
 
@@ -320,7 +320,7 @@ export class ConfigContext extends Component {
                 landId: this.state.currentLand.id,
                 tags: tags
             }).then(res => {
-                log("Tags saved")
+                console.log("Tags saved")
                 this.getTags(this.state.currentLand.id)
                 if (this.state.currentExpression !== null) {
                     this.getTaggedContent({ expressionId: this.state.currentExpression.id })
@@ -337,7 +337,7 @@ export class ConfigContext extends Component {
         } else {
             const param = qs.stringify(scope)
             axios.get(`/api/taggedContent?${param}`).then(res => {
-                log(`Loaded tagged content for ${param}`)
+                console.log(`Loaded tagged content for ${param}`)
                 this.setState({ taggedContent: res.data })
             })
         }
@@ -358,7 +358,7 @@ export class ConfigContext extends Component {
             end: end,
         }).then(res => {
             if (res.data === true) {
-                log(`Saved tagged content`)
+                console.log(`Saved tagged content`)
                 this.getTaggedContent({ expressionId: expressionId })
             }
         })

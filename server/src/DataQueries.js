@@ -1,8 +1,46 @@
 import sqlite from "sqlite3"
 import Mercury from "@postlight/mercury-parser"
-import {log, placeholders} from "../../client/src/app/Util"
 
 let db
+
+const placeholders = params => {
+    if (Array.isArray(params)) {
+        return params.map(_ => '?').join(',')
+    }
+    return '?'
+}
+
+const getSiblingExpression = (offset, req, res) => {
+    const params = [
+        req.query.landId,
+        req.query.minRelevance ?? 0,
+        req.query.maxDepth ?? 3,
+        req.query.id
+    ]
+
+    const column = req.query.sortColumn
+    const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC'
+
+    const sql = `SELECT sibling
+                     FROM (
+                          SELECT e.id,
+                                 LEAD(e.id, ${offset}, NULL) OVER (ORDER BY ${column} ${order}) AS sibling
+                          FROM expression AS e
+                                   JOIN domain AS d ON d.id = e.domain_id
+                                   LEFT JOIN taggedcontent AS t ON t.expression_id = e.id
+                          WHERE e.land_id = ?
+                            AND e.http_status = 200
+                            AND e.relevance >= ?
+                            AND e.depth <= ?
+                          GROUP BY e.id
+                      ) AS t
+                     WHERE t.id = ?`
+
+    db.get(sql, params, (err, row) => {
+        const response = !err && row ? row.sibling : null
+        res.json(response)
+    })
+}
 
 const DataQueries = {
     connect: (req, res) => {
@@ -11,7 +49,7 @@ const DataQueries = {
             if (err) console.error(err.message)
             else {
                 db.run('PRAGMA foreign_keys = ON')
-                log(`Connected to ${req.query.db}`)
+                console.log(`Connected to ${req.query.db}`)
             }
             res.json(!err)
         })
@@ -143,77 +181,11 @@ const DataQueries = {
     },
 
     getPrevExpression: (req, res) => {
-        const params = [
-            req.query.landId,
-            req.query.minRelevance ?? 0,
-            req.query.maxDepth ?? 3,
-            req.query.id,
-        ]
-
-        const column = req.query.sortColumn
-        const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC'
-
-        const sql = `WITH sorted(id, domainName, tagCount, num) AS (
-            SELECT
-                e.id,
-                d.name        AS domainName,
-                COUNT(t.id) AS tagCount,
-                ROW_NUMBER() OVER (ORDER BY ${column} ${order}) AS num
-            FROM expression AS e
-            JOIN domain AS d ON d.id = e.domain_id
-            LEFT JOIN taggedcontent AS t ON t.expression_id = e.id            
-            WHERE e.land_id = ?
-              AND e.http_status = 200
-              AND e.relevance >= ?
-              AND e.depth <= ?
-            GROUP BY e.id)
-            SELECT s2.id
-            FROM sorted s1
-            JOIN sorted S2
-            WHERE s1.id = ?
-              AND s2.num = s1.num - 1`
-
-        db.get(sql, params, (err, row) => {
-            const response = !err && row ? row.id : null
-            res.json(response)
-        })
+        getSiblingExpression(-1, req, res)
     },
 
     getNextExpression: (req, res) => {
-        const params = [
-            req.query.landId,
-            req.query.minRelevance ?? 0,
-            req.query.maxDepth ?? 3,
-            req.query.id,
-        ]
-
-        const column = req.query.sortColumn
-        const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC'
-
-        const sql = `WITH sorted(id, domainName, tagCount, num) AS (
-            SELECT
-                e.id,
-                d.name        AS domainName,
-                COUNT(t.id) AS tagCount,
-            ROW_NUMBER() OVER (ORDER BY ${column} ${order}) AS num
-            FROM expression AS e
-            JOIN domain AS d ON d.id = e.domain_id
-            LEFT JOIN taggedcontent AS t ON t.expression_id = e.id            
-            WHERE e.land_id = ?
-              AND e.http_status = 200
-              AND e.relevance >= ?
-              AND e.depth <= ?
-            GROUP BY e.id)
-            SELECT s2.id
-            FROM sorted s1
-            JOIN sorted S2
-            WHERE s1.id = ?
-              AND s2.num = s1.num + 1`
-
-        db.get(sql, params, (err, row) => {
-            const response = !err && row ? row.id : null
-            res.json(response)
-        })
+        getSiblingExpression(1, req, res)
     },
 
     getReadable: (req, res) => {
@@ -231,11 +203,11 @@ const DataQueries = {
                     }).then(result => {
                         res.json(result.content)
                     }).catch(err => {
-                        log(err)
+                        console.log(err)
                         res.json(null)
                     })
                 } catch (err) {
-                    log(err)
+                    console.log(err)
                     res.json(null)
                 }
             } else {
@@ -248,15 +220,15 @@ const DataQueries = {
         try {
             db.run('UPDATE expression SET readable = ? WHERE id = ?', [req.body.content, req.body.id], err => {
                 if (err) {
-                    log(`Error : ${err.code} on processing readable #${req.body.id}`)
+                    console.log(`Error : ${err.code} on processing readable #${req.body.id}`)
                 } else {
                     const byteSize = Buffer.from(req.body.content).length
-                    log(`Saved ${byteSize} bytes from readable #${req.body.id}`)
+                    console.log(`Saved ${byteSize} bytes from readable #${req.body.id}`)
                     res.json(true)
                 }
             })
         } catch (err) {
-            log(`Error : undefined content for expression #${req.body.id}`)
+            console.log(`Error : undefined content for expression #${req.body.id}`)
             res.json(false)
         }
     },
@@ -360,13 +332,6 @@ const DataQueries = {
         })
     },
 
-    getAllTaggedContent: (req, res) => {
-        db.all(sql, [req.query.landId], (err, rows) => {
-            const response = !err ? rows : []
-            res.json(response)
-        })
-    },
-
     getTaggedContent: (req, res) => {
         let sql,
             param
@@ -400,7 +365,6 @@ const DataQueries = {
     },
 
     setTaggedContent: (req, res) => {
-        log([req.body.tagId, req.body.expressionId, req.body.text, req.body.start, req.body.end])
         const sql = 'INSERT INTO taggedContent (tag_id, expression_id, `text`,  from_char, to_char) VALUES (?, ?, ?, ?, ?)'
         db.run(sql, [req.body.tagId, req.body.expressionId, req.body.text, req.body.start, req.body.end], (err) => {
             const response = !err ? true : err
