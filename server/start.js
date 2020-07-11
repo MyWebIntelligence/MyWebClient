@@ -92,13 +92,4 @@ app.post('/api/tagContent', (req, res) => {
     DataQueries.setTaggedContent(req, res)
 });
 
-/*
-app.post('/api/setdb', (req, res) => {
-    log(req.body);
-    res.send(
-        `I received your POST request. This is what you sent me: ${req.body.post}`,
-    );
-});
- */
-
 app.listen(port, () => log(`Listening on port ${port}`));

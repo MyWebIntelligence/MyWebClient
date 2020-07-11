@@ -150,15 +150,28 @@ const DataQueries = {
             req.query.id,
         ]
 
-        const sql = `SELECT e.id
-                     FROM expression AS e
-                     WHERE e.land_id = ?
-                       AND e.http_status = 200
-                       AND e.relevance >= ?
-                       AND e.depth <= ?
-                       AND id < ?
-                     ORDER BY id DESC
-                     LIMIT 1`
+        const column = req.query.sortColumn
+        const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC'
+
+        const sql = `WITH sorted(id, domainName, tagCount, num) AS (
+            SELECT
+                e.id,
+                d.name        AS domainName,
+                COUNT(t.id) AS tagCount,
+                ROW_NUMBER() OVER (ORDER BY ${column} ${order}) AS num
+            FROM expression AS e
+            JOIN domain AS d ON d.id = e.domain_id
+            LEFT JOIN taggedcontent AS t ON t.expression_id = e.id            
+            WHERE e.land_id = ?
+              AND e.http_status = 200
+              AND e.relevance >= ?
+              AND e.depth <= ?
+            GROUP BY e.id)
+            SELECT s2.id
+            FROM sorted s1
+            JOIN sorted S2
+            WHERE s1.id = ?
+              AND s2.num = s1.num - 1`
 
         db.get(sql, params, (err, row) => {
             const response = !err && row ? row.id : null
@@ -174,15 +187,28 @@ const DataQueries = {
             req.query.id,
         ]
 
-        const sql = `SELECT e.id
-                     FROM expression AS e
-                     WHERE e.land_id = ?
-                       AND e.http_status = 200
-                       AND e.relevance >= ?
-                       AND e.depth <= ?
-                       AND id > ?
-                     ORDER BY id
-                     LIMIT 1`
+        const column = req.query.sortColumn
+        const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC'
+
+        const sql = `WITH sorted(id, domainName, tagCount, num) AS (
+            SELECT
+                e.id,
+                d.name        AS domainName,
+                COUNT(t.id) AS tagCount,
+            ROW_NUMBER() OVER (ORDER BY ${column} ${order}) AS num
+            FROM expression AS e
+            JOIN domain AS d ON d.id = e.domain_id
+            LEFT JOIN taggedcontent AS t ON t.expression_id = e.id            
+            WHERE e.land_id = ?
+              AND e.http_status = 200
+              AND e.relevance >= ?
+              AND e.depth <= ?
+            GROUP BY e.id)
+            SELECT s2.id
+            FROM sorted s1
+            JOIN sorted S2
+            WHERE s1.id = ?
+              AND s2.num = s1.num + 1`
 
         db.get(sql, params, (err, row) => {
             const response = !err && row ? row.id : null
@@ -286,9 +312,9 @@ const DataQueries = {
     },
 
     /**
-     * Selects all tags from land to build existing index
-     * Then walks through all incoming nodes to insert new nodes, update existing nodes and build future index
-     * This enables both indexes to be compared then deletions can be committed
+     * Selects all tags from land to build server-side index
+     * Then walks through all GUI-side nodes to insert or update nodes and build new index
+     * Then both indexes are compared so deletions can be committed
      * @param req
      * @param res
      */
@@ -327,19 +353,38 @@ const DataQueries = {
 
             walk(req.body.tags, null)
 
-            const toDelete = prevIndex.filter(index => !nextIndex.includes(index))
-            toDelete.forEach(id => remove.run([id]))
+            const deletions = prevIndex.filter(index => !nextIndex.includes(index))
+            deletions.forEach(id => remove.run([id]))
 
             res.json(true)
+        })
+    },
 
+    getAllTaggedContent: (req, res) => {
+        db.all(sql, [req.query.landId], (err, rows) => {
+            const response = !err ? rows : []
+            res.json(response)
         })
     },
 
     getTaggedContent: (req, res) => {
-        const sql = `SELECT *
-                     FROM taggedContent
-                     WHERE expression_id = ?`
-        db.all(sql, [req.query.expressionId], (err, rows) => {
+        let sql,
+            param
+
+        if ('expressionId' in req.query) {
+            sql = `SELECT *
+                   FROM taggedContent
+                   WHERE expression_id = ?`
+            param = req.query.expressionId
+        } else if ('landId' in req.query) {
+            sql = `SELECT *
+                   FROM taggedContent AS tc
+                            JOIN expression AS e ON e.id = tc.expression_id
+                   WHERE e.land_id = ?`
+            param = req.query.landId
+        }
+
+        db.all(sql, [param], (err, rows) => {
             const response = !err ? rows : []
             res.json(response)
         })

@@ -112,23 +112,23 @@ const TagRenderer = ({
                             <div className={styles.rowLabel}>
                                 {title || <div>
                                     <span
-                                    className={styles.rowTitle +
-                                    (node.subtitle ? ` ${styles.rowTitleWithSubtitle}` : '')
-                                    }>
+                                        className={styles.rowTitle +
+                                        (node.subtitle ? ` ${styles.rowTitleWithSubtitle}` : '')
+                                        }>
                                     {typeof node.title === 'function' ?
                                         node.title({node, path, treeIndex}) :
                                         node.title
                                     }
                                 </span>
 
-                                {node.subtitle &&
+                                    {node.subtitle &&
                                     <span className={styles.rowSubtitle}>
                                     {typeof node.subtitle === 'function' ?
                                         node.subtitle({node, path, treeIndex}) :
                                         node.subtitle
                                     }
                                     </span>
-                                }</div>}
+                                    }</div>}
                             </div>
 
                             <div className={styles.rowToolbar}>
@@ -163,8 +163,8 @@ TagRenderer.propTypes = {
     // Drag source
     connectDragPreview: PropTypes.func.isRequired,
     connectDragSource: PropTypes.func.isRequired,
-    //startDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
-    //endDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
+    startDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
+    endDrag: PropTypes.func.isRequired, // Needed for drag-and-drop utils
     isDragging: PropTypes.bool.isRequired,
     draggedNode: PropTypes.object,
     // Drop target
