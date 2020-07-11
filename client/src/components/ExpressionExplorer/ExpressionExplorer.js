@@ -136,18 +136,18 @@ function ExpressionExplorer() {
                         </th>
                         <th className="text-center">
                             <span onClick={_ => {
-                                context.setSortColumn('domainName')
-                            }}>{sortHint('domainName', 'Domain')}</span>
+                                context.setSortColumn('d.name')
+                            }}>{sortHint('d.name', 'Domain')}</span>
                         </th>
                         <th style={{width: "100px"}} className="text-center">
                             <span onClick={_ => {
-                                context.setSortColumn('relevance')
-                            }}>{sortHint('relevance', 'Relevance')}</span>
+                                context.setSortColumn('e.relevance')
+                            }}>{sortHint('e.relevance', 'Relevance')}</span>
                         </th>
                         <th style={{width: "100px"}} className="text-center">
                             <span onClick={_ => {
-                                context.setSortColumn('tagCount')
-                            }}>{sortHint('tagCount', 'Tags')}</span>
+                                context.setSortColumn('COUNT(t.id)')
+                            }}>{sortHint('COUNT(t.id)', 'Tags')}</span>
                         </th>
                         <th style={{width: "40px"}}/>
                     </tr>
