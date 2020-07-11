@@ -26,7 +26,7 @@ function Domain() {
         return () => {
             document.removeEventListener("keydown", keyboardControl, false)
         }
-    }, [context])
+    }, [keyboardControl])
 
     return <section className={"Domain" + (context.currentDomain ? " d-block" : "")}>
         <Row>

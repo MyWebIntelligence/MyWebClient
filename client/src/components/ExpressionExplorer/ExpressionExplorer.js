@@ -24,7 +24,8 @@ function ExpressionExplorer() {
     const keyboardControl = useCallback(event => {
         const notFocused = document.querySelectorAll('input:focus, textarea:focus').length === 0
         const unloadedExpression = context.currentExpression === null
-        if (notFocused && unloadedExpression) {
+        const unloadedDomain = context.currentDomain === null
+        if (notFocused && unloadedExpression && unloadedDomain) {
             switch (event.keyCode) {
                 case 37: setPrevPage()
                     break
@@ -36,6 +37,7 @@ function ExpressionExplorer() {
                     break
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [context, selected])
 
     useEffect(() => {
@@ -43,7 +45,7 @@ function ExpressionExplorer() {
         return () => {
             document.removeEventListener("keydown", keyboardControl, false)
         }
-    }, [context, selected])
+    }, [keyboardControl])
 
     const groupSelect = event => {
         setSelected(event.target.checked)
@@ -124,8 +126,8 @@ function ExpressionExplorer() {
                         </th>
                         <th style={{width: "75px"}} className="text-center">
                             <span onClick={_ => {
-                                context.setSortColumn('id')
-                            }}>{sortHint('id', '#')}</span>
+                                context.setSortColumn('e.id')
+                            }}>{sortHint('e.id', '#')}</span>
                         </th>
                         <th>
                             <span onClick={_ => {
@@ -159,8 +161,7 @@ function ExpressionExplorer() {
                                        data-expressionid={expression.id}/>
                             </td>
                             <td style={{width: "75px"}} className="text-center">{expression.id}</td>
-                            <td><span className="hover-pill"
-                                      onClick={_ => context.getExpression(expression.id)}>{expression.title}</span></td>
+                            <td><span className="hover-pill">{expression.title}</span></td>
                             <td className="text-center"><span className="hover-pill"
                                                               onClick={ event => { event.stopPropagation(); context.getDomain(expression.domainId) }}>{expression.domainName}</span>
                             </td>
