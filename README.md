@@ -29,27 +29,17 @@ Enter project directory
 > cd MyWebClient
 ```
 
-Install server dependencies
+Install dependencies
 
 ```
 MyWebClient> yarn install
 ```
 
-Go to client directory
-
-```
-MyWebClient> cd client
-```
-
-Install client dependencies
-
-```
-MyWebClient/client> yarn install
-```
+Client dependencies should install subsequently (postinstall lifecycle event)
 
 ## Start application
 
-At project root directory and launch server and client app concurrently
+Inside project root directory, launch server and client app concurrently
 
 ```
 MyWebClient> yarn standalone
