@@ -5,8 +5,5 @@ WORKDIR /app
 COPY . .
 RUN yarn install
 
-WORKDIR /app/client
-RUN yarn install
-
 WORKDIR /app
 CMD ["yarn", "standalone"]
