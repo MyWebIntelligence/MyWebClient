@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
+    "postinstall": "cd client && yarn insall",
     "client": "cd client && yarn start",
     "server": "nodemon --exec babel-node server/src/start.js",
     "standalone": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\""
