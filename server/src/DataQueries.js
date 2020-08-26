@@ -342,7 +342,7 @@ const DataQueries = {
                    WHERE expression_id = ?`
             param = req.query.expressionId
         } else if ('landId' in req.query) {
-            sql = `SELECT *
+            sql = `SELECT tc.*
                    FROM taggedContent AS tc
                             JOIN expression AS e ON e.id = tc.expression_id
                    WHERE e.land_id = ?`
@@ -371,6 +371,14 @@ const DataQueries = {
             res.json(response)
         })
     },
+
+    moveTag: (req, res) => {
+        const sql = `UPDATE taggedContent SET tag_id = ? WHERE id = ?`
+        db.run(sql, [req.body.tagId, req.body.contentId], (err) => {
+            const response = !err ? true : err
+            res.json(response)
+        })
+    }
 }
 
 export default DataQueries

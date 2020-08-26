@@ -92,4 +92,9 @@ app.post('/api/tagContent', (req, res) => {
     DataQueries.setTaggedContent(req, res)
 });
 
+app.post('/api/moveTag', (req, res) => {
+    console.log(`Moving tagged content`);
+    DataQueries.moveTag(req, res)
+});
+
 app.listen(port, () => console.log(`Listening on port ${port}`));

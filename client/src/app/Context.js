@@ -34,6 +34,7 @@ export class ConfigContext extends Component {
             sortOrder: 1,
             tags: [],
             taggedContent: [],
+            allTaggedContent: null,
         }
         this.state = this.initialState
     }
@@ -56,6 +57,7 @@ export class ConfigContext extends Component {
                             currentExpression: null,
                             tags: [],
                             taggedContent: [],
+                            allTaggedContent: null,
                         })
                         this.getLand(res.data[0].id)
                     })
@@ -84,6 +86,7 @@ export class ConfigContext extends Component {
                 currentPage: 1,
                 tags: [],
                 taggedContent: [],
+                allTaggedContent: null,
             })
         } else {
             const switchingLand = !(this.state.currentLand && (this.state.currentLand.id === id))
@@ -117,6 +120,8 @@ export class ConfigContext extends Component {
                         currentDepth: DEFAULT_DEPTH,
                         minDepth: land.minDepth,
                         maxDepth: land.maxDepth,
+                        taggedContent: [],
+                        allTaggedContent: null,
                     })
                     this.getExpressions(land.id)
                     this.getTags(land.id)
@@ -157,7 +162,10 @@ export class ConfigContext extends Component {
 
     getExpression = id => {
         if (id === null) {
-            this.setState({ currentExpression: null })
+            this.setState({
+                currentExpression: null,
+                taggedContent: []
+            })
         } else {
             axios.get(`/api/expression?id=${id}`).then(res => {
                 console.log(`Loaded expression #${id}`)
@@ -331,11 +339,11 @@ export class ConfigContext extends Component {
         this.setState({ tags: tags })
     }
 
-    getTaggedContent = scope => {
-        if (scope === null) {
+    getTaggedContent = params => {
+        if (params === null) {
             this.setState({ taggedContent: [] })
         } else {
-            const param = qs.stringify(scope)
+            const param = qs.stringify(params)
             axios.get(`/api/taggedContent?${param}`).then(res => {
                 console.log(`Loaded tagged content for ${param}`)
                 this.setState({ taggedContent: res.data })
@@ -343,10 +351,52 @@ export class ConfigContext extends Component {
         }
     }
 
-    deleteTaggedContent = taggedContentId => {
+    getAllTaggedContent = params => {
+        if (params === null) {
+            this.setState({ allTaggedContent: null })
+        } else {
+            const param = qs.stringify(params)
+            axios.get(`/api/taggedContent?${param}`).then(res => {
+                console.log(`Loaded tagged content for ${param}`)
+                this.setState({ allTaggedContent: res.data })
+            })
+        }
+    }
+
+    deleteTaggedContent = (taggedContentId, reloadAll = false) => {
         axios.get(`/api/deleteTaggedContent?id=${taggedContentId}`).then(res => {
-            this.getTaggedContent({ expressionId: this.state.currentExpression.id })
+            if (reloadAll === true) {
+                this.getAllTaggedContent({ landId: this.state.currentLand.id })
+            } else {
+                this.getTaggedContent({ expressionId: this.state.currentExpression.id })
+            }
         })
+    }
+
+    flatTags = (tags, depth) => {
+        let out = []
+        tags.forEach(tag => {
+            tag.depth = depth
+            out.push(tag)
+            out = out.concat(this.flatTags(tag.children, depth + 1))
+        })
+        return out
+    }
+
+    categorizeTaggedContent = tags => {
+        let data = []
+        this.flatTags(this.state.tags).forEach(tag => {
+            let tagContent = {id: tag.id, name: tag.title, contents: []}
+            tags.forEach(content => {
+                if (content.tag_id === tag.id) {
+                    tagContent.contents.push(content)
+                }
+            })
+            if (tagContent.contents.length > 0) {
+                data.push(tagContent)
+            }
+        })
+        return data
     }
 
     tagContent = (tagId, expressionId, text, start, end) => {
@@ -361,6 +411,21 @@ export class ConfigContext extends Component {
                 console.log(`Saved tagged content`)
                 this.getTaggedContent({ expressionId: expressionId })
             }
+        })
+    }
+
+    moveTag = (contentId, tagId, reloadAll = false) => {
+        axios.post('/api/moveTag', {
+            contentId: contentId,
+            tagId: tagId,
+        }).then(res => {
+            console.log(`Moved content #${contentId} to tag #${tagId}`)
+            if (reloadAll === true) {
+                this.getAllTaggedContent({landId: this.state.currentLand.id})
+            } else {
+                this.getTaggedContent({expressionId: this.state.currentExpression.id})
+            }
+            return res.data
         })
     }
 
@@ -386,8 +451,12 @@ export class ConfigContext extends Component {
             getTags: this.getTags,
             setTags: this.setTags,
             getTaggedContent: this.getTaggedContent,
+            getAllTaggedContent: this.getAllTaggedContent,
             tagContent: this.tagContent,
+            moveTag: this.moveTag,
+            flatTags: this.flatTags,
             deleteTaggedContent: this.deleteTaggedContent,
+            categorizeTaggedContent: this.categorizeTaggedContent,
         }
         return (
             <Context.Provider value={state}>
