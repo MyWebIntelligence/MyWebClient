@@ -1,6 +1,7 @@
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react"
 import {Context} from '../../app/Context'
 import {Button, ButtonGroup, ButtonToolbar, Badge, Container, Row, Col, Form} from "react-bootstrap"
+import TaggedContent from "../TagExplorer/TaggedContent";
 
 function Expression() {
     const context = useContext(Context)
@@ -110,12 +111,6 @@ function Expression() {
         }
     }
 
-    const deleteTaggedContent = taggedContentId => {
-        if (window.confirm("Are your sure to delete this content?")) {
-            context.deleteTaggedContent(taggedContentId)
-        }
-    }
-
     const getReadable = _ => {
         const currentContent = context.currentExpression.readable
         const content = context.getReadable(context.currentExpression.id)
@@ -136,32 +131,6 @@ function Expression() {
         setContentChanged(false)
     }
 
-    const flatTags = (tags, depth) => {
-        let out = []
-        tags.forEach(tag => {
-            tag.depth = depth
-            out.push(tag)
-            out = out.concat(flatTags(tag.children, depth + 1))
-        })
-        return out
-    }
-
-    const categorizeTaggedContent = _ => {
-        let data = []
-        flatTags(context.tags).forEach(tag => {
-            let tagContent = {name: tag.title, contents: []}
-            context.taggedContent.forEach(content => {
-                if (content.tag_id === tag.id) {
-                    tagContent.contents.push(content)
-                }
-            })
-            if (tagContent.contents.length > 0) {
-                data.push(tagContent)
-            }
-        })
-        return data
-    }
-
     return <section className={"ExpressionExplorer-details" + (context.currentExpression ? " d-block" : "")}>
         <Row>
             <Col md="8">
@@ -172,7 +141,8 @@ function Expression() {
                               onClick={_ => context.getDomain(context.currentExpression.domainId)}>{context.currentExpression.domainName}</span>
                     </h5>
                     <h2 className="m-0">{context.currentExpression.title}</h2>
-                    <p><small><a href={context.currentExpression.url} target="_blank" rel="noopener noreferrer">{context.currentExpression.url}</a></small></p>
+                    <p><small><a href={context.currentExpression.url} target="_blank"
+                                 rel="noopener noreferrer">{context.currentExpression.url}</a></small></p>
                 </div>
             </Col>
             <Col md="4" className="d-flex align-items-start justify-content-end">
@@ -246,47 +216,30 @@ function Expression() {
                     </div>}
 
                     {!textSelection || <div className="alert alert-success">
-                            <h6>Select tag</h6>
-                            <p className="App-text-excerpt my-2">{textSelection}</p>
-                            <Form>
-                                <div className="input-group">
-                                    <Form.Control as="select" ref={tagRef}>
-                                        {flatTags(context.tags, 0).map((tag, i) => <option
-                                            key={i}
-                                            value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.title}</option>)}
-                                    </Form.Control>
-                                    <div className="input-group-append">
-                                        <Button onClick={_ => {
-                                            context.tagContent(
-                                                tagRef.current.value,
-                                                context.currentExpression.id,
-                                                textSelection,
-                                                selectionStart,
-                                                selectionEnd)
-                                        }}>Save</Button>
-                                    </div>
+                        <h6>Select tag</h6>
+                        <p className="App-text-excerpt my-2">{textSelection}</p>
+                        <Form>
+                            <div className="input-group">
+                                <Form.Control as="select" ref={tagRef}>
+                                    {context.flatTags(context.tags, 0).map((tag, i) => <option
+                                        key={i}
+                                        value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.title}</option>)}
+                                </Form.Control>
+                                <div className="input-group-append">
+                                    <Button onClick={_ => {
+                                        context.tagContent(
+                                            tagRef.current.value,
+                                            context.currentExpression.id,
+                                            textSelection,
+                                            selectionStart,
+                                            selectionEnd)
+                                    }}>Save</Button>
                                 </div>
-                            </Form>
-                        </div>}
-
-                    {context.taggedContent.length === 0 &&
-                    <p className="alert alert-warning">No content tagged yet.</p>}
-                    {context.taggedContent.length > 0 && <div>
-                        <h5>Tagged content</h5>
-                        <div className="panel taggedContentExplorer py-2 my-3">
-                            <ul>
-                                {categorizeTaggedContent().map((tag, i) => <li key={i}>
-                                    <h6 className="App-objtype">{tag.name}</h6>
-                                    <ul>
-                                        {tag.contents.map((content, j) => <li key={j}>
-                                            <i className="fas fa-times text-danger float-right" onClick={_ => deleteTaggedContent(content.id)}/>
-                                            <p className="App-text-excerpt mb-1">{content.text}</p>
-                                        </li>)}
-                                    </ul>
-                                </li>)}
-                            </ul>
-                        </div>
+                            </div>
+                        </Form>
                     </div>}
+
+                    <TaggedContent tags={context.taggedContent}/>
                 </Col>
             </Row>
         </Container>

@@ -2,8 +2,9 @@ import React, {useCallback, useContext, useEffect, useState} from 'react'
 import {Context} from '../../app/Context'
 import {Row, Col, Badge, Button, Table} from 'react-bootstrap'
 import './ExpressionExplorer.css'
-import Expression from "./Expression"
-import Domain from "../Domain/Domain"
+import Expression from './Expression'
+import Domain from '../Domain/Domain'
+import TaggedContent from '../TagExplorer/TaggedContent';
 
 function ExpressionExplorer() {
     const context = useContext(Context)
@@ -196,6 +197,9 @@ function ExpressionExplorer() {
 
             {context.currentExpression && <Expression/>}
             {context.currentDomain && <Domain/>}
+            {context.allTaggedContent && <div className="taggedContentExplorer">
+                <TaggedContent tags={context.allTaggedContent} forLand={true}/>
+            </div>}
         </div>
     )
 }
