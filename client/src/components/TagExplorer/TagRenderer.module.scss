@@ -1,4 +1,4 @@
-$color-light: #ced4da;
+$color-light: #ccc;
 $color-primary: #007bff;
 $row-padding: 3px;
 
@@ -90,7 +90,6 @@ $row-padding: 3px;
   input {
     border: 1px solid transparent;
     border-radius: .25rem;
-    font-weight: 700;
     width: 120px;
 
     &:hover, &:focus {

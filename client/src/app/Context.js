@@ -178,7 +178,7 @@ export class ConfigContext extends Component {
     deleteExpression = id => {
         this.setState({ isLoadingExpressions: true })
         const ids = {id: id}
-        axios.get(`/api/deleteExpression?${qs.stringify(ids, { encode: false, arrayFormat: 'brackets' })}`).then(res => {
+        axios.get(`/api/deleteExpression?${qs.stringify(ids, { encode: false, arrayFormat: 'brackets' })}`).then(_ => {
             console.log(`Loaded expression #${id}`)
         })
     }
@@ -314,8 +314,8 @@ export class ConfigContext extends Component {
                     return true
                 }
 
-                if (tag.title !== b[i].title) {
-                    console.log(`Name changed from ${tag.title} to ${b[i].title}`)
+                if (tag.name !== b[i].name) {
+                    console.log(`Name changed from ${tag.name} to ${b[i].name}`)
                     return true
                 }
 
@@ -327,7 +327,7 @@ export class ConfigContext extends Component {
             axios.post(`/api/tags`, {
                 landId: this.state.currentLand.id,
                 tags: tags
-            }).then(res => {
+            }).then(_ => {
                 console.log("Tags saved")
                 this.getTags(this.state.currentLand.id)
                 if (this.state.currentExpression !== null) {
@@ -337,6 +337,18 @@ export class ConfigContext extends Component {
         }
 
         this.setState({ tags: tags })
+    }
+
+    updateTag = tag => {
+        axios.post('/api/updateTag', {
+            id: tag.id,
+            name: tag.name,
+            color: tag.color,
+        }).then(res => {
+            console.log(`Updated tag #${tag.id}`)
+            this.getTags(this.state.currentLand.id)
+            return res.data
+        })
     }
 
     getTaggedContent = params => {
@@ -364,7 +376,7 @@ export class ConfigContext extends Component {
     }
 
     deleteTaggedContent = (taggedContentId, reloadAll = false) => {
-        axios.get(`/api/deleteTaggedContent?id=${taggedContentId}`).then(res => {
+        axios.get(`/api/deleteTaggedContent?id=${taggedContentId}`).then(_ => {
             if (reloadAll === true) {
                 this.getAllTaggedContent({ landId: this.state.currentLand.id })
             } else {
@@ -386,10 +398,10 @@ export class ConfigContext extends Component {
     categorizeTaggedContent = tags => {
         let data = []
         this.flatTags(this.state.tags).forEach(tag => {
-            let tagContent = {id: tag.id, name: tag.title, contents: []}
-            tags.forEach(content => {
-                if (content.tag_id === tag.id) {
-                    tagContent.contents.push(content)
+            let tagContent = {...tag, contents: []}
+            tags.forEach(taggedContent => {
+                if (taggedContent.tag_id === tag.id) {
+                    tagContent.contents.push(taggedContent)
                 }
             })
             if (tagContent.contents.length > 0) {
@@ -414,12 +426,13 @@ export class ConfigContext extends Component {
         })
     }
 
-    moveTag = (contentId, tagId, reloadAll = false) => {
-        axios.post('/api/moveTag', {
+    updateTagContent = (contentId, tagId, text, reloadAll = false) => {
+        axios.post('/api/updateTagContent', {
             contentId: contentId,
             tagId: tagId,
+            text: text,
         }).then(res => {
-            console.log(`Moved content #${contentId} to tag #${tagId}`)
+            console.log(`Updated tag content #${contentId}`)
             if (reloadAll === true) {
                 this.getAllTaggedContent({landId: this.state.currentLand.id})
             } else {
@@ -428,6 +441,8 @@ export class ConfigContext extends Component {
             return res.data
         })
     }
+
+    notFocused = _ => document.querySelectorAll('input:focus, textarea:focus').length === 0
 
     render() {
         const state = {
@@ -450,13 +465,15 @@ export class ConfigContext extends Component {
             setSortOrder: this.setSortOrder,
             getTags: this.getTags,
             setTags: this.setTags,
+            updateTag: this.updateTag,
             getTaggedContent: this.getTaggedContent,
             getAllTaggedContent: this.getAllTaggedContent,
             tagContent: this.tagContent,
-            moveTag: this.moveTag,
+            updateTagContent: this.updateTagContent,
             flatTags: this.flatTags,
             deleteTaggedContent: this.deleteTaggedContent,
             categorizeTaggedContent: this.categorizeTaggedContent,
+            notFocused: this.notFocused,
         }
         return (
             <Context.Provider value={state}>

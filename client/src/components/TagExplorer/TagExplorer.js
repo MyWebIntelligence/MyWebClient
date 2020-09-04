@@ -1,18 +1,23 @@
-import React, {useContext, useEffect, useState} from 'react';
-import {Context} from "../../app/Context";
-import SortableTree, {addNodeUnderParent, removeNodeAtPath, changeNodeAtPath} from 'react-sortable-tree';
-import TagRenderer from "./TagRenderer";
-import './TagExplorer.css';
-import {Button, OverlayTrigger, Tooltip} from "react-bootstrap";
+import React, {useContext, useEffect, useState} from 'react'
+import {Context} from "../../app/Context"
+import SortableTree, {addNodeUnderParent, removeNodeAtPath, changeNodeAtPath} from 'react-sortable-tree'
+import TagRenderer from "./TagRenderer"
+import './TagExplorer.css'
+import {Button, Modal, OverlayTrigger, Tooltip} from "react-bootstrap"
+import {SliderPicker} from 'react-color'
 
 function TagExplorer() {
 
     const context = useContext(Context)
+    const defaultColor = '#007bff'
     const [treeData, setTreeData] = useState(context.tags)
-    const getNodeKey = ({treeIndex}) => treeIndex;
-    const newTag = {title: "New tag", color: "#ff0000", children: []}
+    const getNodeKey = ({treeIndex}) => treeIndex
+    const newTag = {name: 'New tag', color: defaultColor, children: []}
+    const [currentTag, setCurrentTag] = useState(null);
+    const [showModal, setShowModal] = useState(false)
+    const handleClose = _ => setShowModal(false)
 
-    useEffect(_ => {
+    useEffect(() => {
         setTreeData(context.tags)
     }, [context.tags])
 
@@ -21,8 +26,10 @@ function TagExplorer() {
 
         <div className="panel py-2">
             <div className="pt-2">
-                <Button onClick={() => context.setTags([...context.tags, newTag])} size="sm" className="mr-2">Add new</Button>
-                <Button onClick={_ => context.getAllTaggedContent({landId: context.currentLand.id})} size="sm" className="mr-2">View tagged content</Button>
+                <Button onClick={() => context.setTags([...context.tags, newTag])} size="sm" className="mr-2">Add
+                    new</Button>
+                <Button onClick={_ => context.getAllTaggedContent({landId: context.currentLand.id})} size="sm"
+                        className="mr-2">View tagged content</Button>
             </div>
 
             <hr/>
@@ -37,17 +44,17 @@ function TagExplorer() {
                     rowHeight={36}
                     //treeNodeRenderer={TreeRenderer}
                     nodeContentRenderer={TagRenderer}
-                    generateNodeProps={({node, path}) => ({
+                    generateNodeProps={({node: tag, path}) => ({
                         title: <input
-                            value={node.title}
+                            value={tag.name}
                             onChange={
                                 event => {
-                                    const title = event.target.value
+                                    const name = event.target.value
                                     setTreeData(changeNodeAtPath({
                                         treeData: [...treeData],
                                         path,
                                         getNodeKey,
-                                        newNode: {...node, title},
+                                        newNode: {...tag, name},
                                     }))
                                 }
                             }
@@ -55,7 +62,7 @@ function TagExplorer() {
                         />,
                         buttons: [
                             <OverlayTrigger placement="right" overlay={
-                                <Tooltip id={`addTag${node.id}`}>{`Add tag in ${node.title}`}</Tooltip>
+                                <Tooltip id={`addTag${tag.id}`}>{`Add tag in ${tag.name}`}</Tooltip>
                             }>
                                 <button className="TagExplorer-nodeControl"
                                         onClick={() =>
@@ -71,8 +78,9 @@ function TagExplorer() {
                                     <i className="fas fa-plus-circle"/>
                                 </button>
                             </OverlayTrigger>,
+
                             <OverlayTrigger placement="right" overlay={
-                                <Tooltip id={`removeTag${node.id}`}>{`Remove tag ${node.title}`}</Tooltip>
+                                <Tooltip id={`removeTag${tag.id}`}>{`Remove tag ${tag.name}`}</Tooltip>
                             }>
                                 <button className="TagExplorer-nodeControl"
                                         onClick={() => {
@@ -87,12 +95,35 @@ function TagExplorer() {
                                     <i className="fas fa-minus-circle"/>
                                 </button>
                             </OverlayTrigger>,
+
+                            <button className="TagExplorer-nodeControl" onClick={_ => {
+                                setCurrentTag(tag);
+                                setShowModal(true)
+                            }}>
+                                <i className="fas fa-tint" style={{color: tag.color}}/>
+                            </button>
                         ],
                     })}
                 />
             </div>
         </div>
+
+        <Modal show={showModal} onHide={handleClose} size="lg">
+            <Modal.Header closeButton>
+                <Modal.Title>Set tag color</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+                <SliderPicker color={currentTag !== null ? currentTag.color : defaultColor}
+                              onChange={(color) => currentTag.color = color.hex}
+                              onChangeComplete={() => context.updateTag(currentTag)}/>
+            </Modal.Body>
+
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>Close</Button>
+            </Modal.Footer>
+        </Modal>
     </div>
 }
 
-export default TagExplorer;
+export default TagExplorer

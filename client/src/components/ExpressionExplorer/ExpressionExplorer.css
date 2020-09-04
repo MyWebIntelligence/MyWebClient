@@ -35,10 +35,12 @@
 }
 
 .ExpressionExplorer-list table thead th {
-    border-bottom: 1px solid #aaa;
+    border-bottom: 1px solid #ccc;
 }
 
 .ExpressionExplorer-list table tbody {
+    border-bottom: 1px solid #ccc;
+    border-left: 1px solid #ccc;
     display: block;
     flex: 1 1 auto;
     overflow-y: scroll;
@@ -60,7 +62,7 @@
 }
 
 .ExpressionExplorer-list table tbody td {
-    border-bottom: 1px solid #aaa;
+    border-top: 1px solid #ccc;
 }
 
 .ExpressionExplorer-list table tfoot {
