@@ -23,10 +23,9 @@ function ExpressionExplorer() {
     }
 
     const keyboardControl = useCallback(event => {
-        const notFocused = document.querySelectorAll('input:focus, textarea:focus').length === 0
         const unloadedExpression = context.currentExpression === null
         const unloadedDomain = context.currentDomain === null
-        if (notFocused && unloadedExpression && unloadedDomain) {
+        if (context.notFocused() && unloadedExpression && unloadedDomain) {
             switch (event.keyCode) {
                 case 37: setPrevPage()
                     break

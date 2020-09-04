@@ -5,15 +5,16 @@ import {Button, Col, Row, Modal, Form} from "react-bootstrap"
 function TaggedContent({tags, forLand = false}) {
     const context = useContext(Context)
     const tagRef = useRef()
+    const contentRef = useRef()
     const [showModal, setShowModal] = useState(false)
     const [currentTag, setCurrentTag] = useState({tagId: null, contentId: null, content: null})
 
-    const handleClose = _ => setShowModal(false);
-    const handleShow = _ => setShowModal(true);
+    const handleClose = _ => setShowModal(false)
+    const handleShow = _ => setShowModal(true)
 
     const keyboardControl = useCallback(event => {
         switch (event.keyCode) {
-            case 27: // ESC Close expression
+            case 27: // ESC Close
                 context.getAllTaggedContent(null)
                 break
             default:
@@ -59,17 +60,23 @@ function TaggedContent({tags, forLand = false}) {
                 <div className="panel py-2 my-3">
                     <ul>
                         {context.categorizeTaggedContent(tags).map((tag, i) => <li key={i}>
-                            <h6 className="App-objtype">{tag.name}</h6>
+                            <h6 className="tagLabel" style={{color: tag.color}}>{tag.name}</h6>
                             <ul>
                                 {tag.contents.map((content, j) => <li key={j}>
-                                    {console.log(content)}
-                                    <i className="fas fa-trash text-danger float-right mx-1"
+                                    <i className="fas fa-trash text-danger float-right ml-1"
                                        onClick={_ => deleteTaggedContent(content.id)}/>
-                                    <i className="fas fa-edit text-primary float-right mx-1"
+
+                                    <i className="fas fa-edit text-primary float-right ml-1"
                                        onClick={_ => {
                                            setCurrentTag({tagId: tag.id, contentId: content.id, content: content.text})
                                            handleShow()
                                        }}/>
+
+                                    {forLand === true && <i className="fas fa-link float-right ml-1 text-primary" onClick={_ => {
+                                        context.getAllTaggedContent(null)
+                                        context.getExpression(content.expression_id)
+                                    }}/>}
+
                                     <p className={(forLand === false ? "App-text-excerpt " : "") + "mb-1"}>{content.text}</p>
                                 </li>)}
                             </ul>
@@ -78,18 +85,17 @@ function TaggedContent({tags, forLand = false}) {
                 </div>
             </div>}
 
-            <Modal show={showModal} onHide={handleClose}>
+            <Modal show={showModal} onHide={handleClose} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Move content</Modal.Title>
+                    <Modal.Title>Edit tag content</Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
-                    {console.log(currentTag)}
-                    <p>{currentTag.content}</p>
+                    <Form.Control as="textarea" ref={contentRef} rows="10" className="mb-3" defaultValue={currentTag.content}/>
                     <Form.Control as="select" ref={tagRef} defaultValue={currentTag.tagId}>
                         {context.flatTags(context.tags, 0).map((tag, i) => <option
                             key={i}
-                            value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.title}</option>)}
+                            value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.name}</option>)}
                     </Form.Control>
                 </Modal.Body>
 
@@ -97,7 +103,7 @@ function TaggedContent({tags, forLand = false}) {
                     <Button variant="secondary" onClick={handleClose}>Close</Button>
                     <Button variant="primary"
                             onClick={_ => {
-                                context.moveTag(currentTag.contentId, parseInt(tagRef.current.value), forLand)
+                                context.updateTagContent(currentTag.contentId, parseInt(tagRef.current.value), contentRef.current.value, forLand)
                                 setShowModal(false)
                             }}>Save
                         changes</Button>

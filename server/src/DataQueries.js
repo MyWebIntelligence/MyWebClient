@@ -271,7 +271,7 @@ const DataQueries = {
         const sql = `SELECT id,
                             land_id,
                             parent_id,
-                            name AS title,
+                            name,
                             sorting,
                             color
                      FROM tag
@@ -304,11 +304,11 @@ const DataQueries = {
                 tag.parent_id = parentId
 
                 if (!('id' in tag)) {
-                    insert.run([tag.land_id, tag.parent_id, tag.title, tag.sorting, tag.color], err => {
+                    insert.run([tag.land_id, tag.parent_id, tag.name, tag.sorting, tag.color], _ => {
                         tag.id = insert.lastID
                     })
                 } else {
-                    update.run([tag.parent_id, tag.title, tag.sorting, tag.color, tag.id])
+                    update.run([tag.parent_id, tag.name, tag.sorting, tag.color, tag.id])
                 }
 
                 nextIndex.push(tag.id)
@@ -329,6 +329,14 @@ const DataQueries = {
             deletions.forEach(id => remove.run([id]))
 
             res.json(true)
+        })
+    },
+
+    updateTag: (req, res) => {
+        const sql = `UPDATE tag SET name = ?, color = ? WHERE id = ?`
+        db.run(sql, [req.body.name, req.body.color, req.body.id], (err) => {
+            const response = !err ? true : err
+            res.json(response)
         })
     },
 
@@ -372,9 +380,9 @@ const DataQueries = {
         })
     },
 
-    moveTag: (req, res) => {
-        const sql = `UPDATE taggedContent SET tag_id = ? WHERE id = ?`
-        db.run(sql, [req.body.tagId, req.body.contentId], (err) => {
+    updateTagContent: (req, res) => {
+        const sql = `UPDATE taggedContent SET tag_id = ?, text= ? WHERE id = ?`
+        db.run(sql, [req.body.tagId, req.body.text, req.body.contentId], (err) => {
             const response = !err ? true : err
             res.json(response)
         })

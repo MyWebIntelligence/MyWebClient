@@ -24,7 +24,7 @@ function Expression() {
     }, [context])
 
     const keyboardControl = useCallback(event => {
-        if (!textRef.current.matches(":focus")) {
+        if (context.notFocused()) {
             switch (event.keyCode) {
                 case 27: // ESC Close expression
                     saveBeforeQuit()
@@ -93,14 +93,14 @@ function Expression() {
             .replace(`/{text}\b/gi`, '<mark>$&</mark>')
     }
 
-    const handleScroll = event => {
+    const handleScroll = _ => {
         backdropRef.current.scrollTop = textRef.current.scrollTop
     }
     /**
      * End todo
      */
 
-    const deleteExpression = event => {
+    const deleteExpression = _ => {
         if (window.confirm("Are you sure to delete expression?")) {
             const expressionId = context.currentExpression.id
             const landId = context.currentExpression.landId
@@ -141,8 +141,14 @@ function Expression() {
                               onClick={_ => context.getDomain(context.currentExpression.domainId)}>{context.currentExpression.domainName}</span>
                     </h5>
                     <h2 className="m-0">{context.currentExpression.title}</h2>
-                    <p><small><a href={context.currentExpression.url} target="_blank"
-                                 rel="noopener noreferrer">{context.currentExpression.url}</a></small></p>
+                    <p>
+                        <small>
+                            <a href={context.currentExpression.url} target="_blank"
+                               rel="noopener noreferrer">{context.currentExpression.url}</a>
+                            &nbsp;
+                            <i className="fas fa-external-link-alt text-primary"/>
+                        </small>
+                    </p>
                 </div>
             </Col>
             <Col md="4" className="d-flex align-items-start justify-content-end">
@@ -223,7 +229,7 @@ function Expression() {
                                 <Form.Control as="select" ref={tagRef}>
                                     {context.flatTags(context.tags, 0).map((tag, i) => <option
                                         key={i}
-                                        value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.title}</option>)}
+                                        value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.name}</option>)}
                                 </Form.Control>
                                 <div className="input-group-append">
                                     <Button onClick={_ => {
