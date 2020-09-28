@@ -19,7 +19,8 @@ html {
     height: 100vh;
     grid-template-columns: 400px auto;
     grid-template-rows: 60px auto;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .App-header {

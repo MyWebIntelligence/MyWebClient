@@ -82,7 +82,7 @@ app.post('/api/updateTag', (req, res) => {
 })
 
 app.get('/api/taggedContent', (req, res) => {
-    console.log(`Getting tagged content for expression #${req.query.expressionId}`)
+    console.log(`Getting tagged content for #${req.query.landId || req.query.expressionId}`)
     DataQueries.getTaggedContent(req, res)
 })
 

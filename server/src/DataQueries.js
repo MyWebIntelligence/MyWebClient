@@ -267,7 +267,7 @@ const DataQueries = {
             })
             return tree
         }
-
+        /*
         const sql = `SELECT id,
                             land_id,
                             parent_id,
@@ -277,6 +277,25 @@ const DataQueries = {
                      FROM tag
                      WHERE land_id = ?
                      ORDER BY parent_id, sorting`
+        */
+        const sql = `WITH RECURSIVE tagPath AS (
+            SELECT id,
+                   name
+            FROM tag
+            WHERE parent_id IS NULL
+            UNION ALL
+            SELECT t.id,
+                   p.name || ' / ' || t.name
+            FROM tagPath AS p
+                     JOIN tag AS t ON p.id = t.parent_id
+        )
+                     SELECT t.*,
+                            tp.name AS path
+                     FROM tag AS t
+                              JOIN tagPath AS tp ON tp.id = t.id
+                     WHERE land_id = ?
+                     ORDER BY parent_id, sorting`
+
         db.all(sql, [req.query.landId], (err, rows) => {
             const response = !err ? buildTagTree(rows) : []
             res.json(response)
@@ -333,7 +352,10 @@ const DataQueries = {
     },
 
     updateTag: (req, res) => {
-        const sql = `UPDATE tag SET name = ?, color = ? WHERE id = ?`
+        const sql = `UPDATE tag
+                     SET name  = ?,
+                         color = ?
+                     WHERE id = ?`
         db.run(sql, [req.body.name, req.body.color, req.body.id], (err) => {
             const response = !err ? true : err
             res.json(response)
@@ -342,22 +364,29 @@ const DataQueries = {
 
     getTaggedContent: (req, res) => {
         let sql,
-            param
+            params = []
 
         if ('expressionId' in req.query) {
             sql = `SELECT *
-                   FROM taggedContent
+                   FROM taggedContent tc
+                            JOIN tag t ON t.id = tc.tag_id
                    WHERE expression_id = ?`
-            param = req.query.expressionId
+            params.push(req.query.expressionId)
         } else if ('landId' in req.query) {
             sql = `SELECT tc.*
                    FROM taggedContent AS tc
                             JOIN expression AS e ON e.id = tc.expression_id
+                            JOIN tag t ON t.id = tc.tag_id
                    WHERE e.land_id = ?`
-            param = req.query.landId
+            params.push(req.query.landId)
         }
 
-        db.all(sql, [param], (err, rows) => {
+        if ('tagId' in req.query) {
+            sql += ` AND t.id = ?`
+            params.push(req.query.tagId)
+        }
+
+        db.all(sql, params, (err, rows) => {
             const response = !err ? rows : []
             res.json(response)
         })
@@ -381,7 +410,10 @@ const DataQueries = {
     },
 
     updateTagContent: (req, res) => {
-        const sql = `UPDATE taggedContent SET tag_id = ?, text= ? WHERE id = ?`
+        const sql = `UPDATE taggedContent
+                     SET tag_id = ?,
+                         text= ?
+                     WHERE id = ?`
         db.run(sql, [req.body.tagId, req.body.text, req.body.contentId], (err) => {
             const response = !err ? true : err
             res.json(response)
