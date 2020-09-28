@@ -4,7 +4,7 @@ import SortableTree, {addNodeUnderParent, removeNodeAtPath, changeNodeAtPath} fr
 import TagRenderer from "./TagRenderer"
 import './TagExplorer.css'
 import {Button, Modal, OverlayTrigger, Tooltip} from "react-bootstrap"
-import {SliderPicker} from 'react-color'
+import {SketchPicker} from 'react-color'
 
 function TagExplorer() {
 
@@ -108,15 +108,17 @@ function TagExplorer() {
             </div>
         </div>
 
-        <Modal show={showModal} onHide={handleClose} size="lg">
+        <Modal show={showModal} onHide={handleClose} size="sm">
             <Modal.Header closeButton>
                 <Modal.Title>Set tag color</Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
-                <SliderPicker color={currentTag !== null ? currentTag.color : defaultColor}
-                              onChange={(color) => currentTag.color = color.hex}
-                              onChangeComplete={() => context.updateTag(currentTag)}/>
+                <div className="d-flex justify-content-center">
+                    <SketchPicker color={currentTag !== null ? currentTag.color : defaultColor}
+                                  onChange={(color) => currentTag.color = color.hex}
+                                  onChangeComplete={() => context.updateTag(currentTag)}/>
+                </div>
             </Modal.Body>
 
             <Modal.Footer>

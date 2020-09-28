@@ -1,6 +1,6 @@
 import React, {useCallback, useContext, useEffect, useRef, useState} from 'react'
 import {Context} from '../../app/Context'
-import {Button, Col, Row, Modal, Form} from "react-bootstrap"
+import {Button, Col, Row, Modal, Form, InputGroup} from "react-bootstrap"
 
 function TaggedContent({tags, forLand = false}) {
     const context = useContext(Context)
@@ -36,6 +36,18 @@ function TaggedContent({tags, forLand = false}) {
         }
     }
 
+    const getFiltered = tagId => {
+        let params = {}
+        if (tagId !== null) {
+            params.tagId = tagId
+        }
+        if (forLand === true) {
+            context.getAllTaggedContent({landId: context.currentLand.id, ...params})
+        } else {
+            context.getTaggedContent({expressionId: context.currentExpression.id, ...params})
+        }
+    }
+
     return (
         <section className="taggedContent" style={{display: tags !== null ? 'block' : 'none'}}>
             {forLand === true && <Row>
@@ -53,14 +65,28 @@ function TaggedContent({tags, forLand = false}) {
                 </Col>
             </Row>}
 
+            {/* Subtitle in sidebar */}
+            {forLand === false && <h5>Tagged content</h5>}
+
+            <InputGroup className="my-3">
+                <InputGroup.Prepend>
+                    <InputGroup.Text><i className="fas fa-filter"/></InputGroup.Text>
+                </InputGroup.Prepend>
+                <Form.Control as="select" onChange={e => getFiltered(e.target.value || null)}>
+                    <option value=''>All tags</option>
+                    {context.flatTags(context.tags, 0).map((tag, i) => <option
+                        key={i}
+                        value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.name}</option>)}
+                </Form.Control>
+            </InputGroup>
+
             {tags.length === 0 &&
             <p className="alert alert-warning">No content tagged yet.</p>}
             {tags.length > 0 && <div>
-                {forLand === false && <h5>Tagged content</h5>}
                 <div className="panel py-2 my-3">
                     <ul>
                         {context.categorizeTaggedContent(tags).map((tag, i) => <li key={i}>
-                            <h6 className="tagLabel" style={{color: tag.color}}>{tag.name}</h6>
+                            <h6 className="tagLabel" style={{color: tag.color}}>{tag.path}</h6>
                             <ul>
                                 {tag.contents.map((content, j) => <li key={j}>
                                     <i className="fas fa-trash text-danger float-right ml-1"
@@ -72,7 +98,8 @@ function TaggedContent({tags, forLand = false}) {
                                            handleShow()
                                        }}/>
 
-                                    {forLand === true && <i className="fas fa-link float-right ml-1 text-primary" onClick={_ => {
+                                    {forLand === true &&
+                                    <i className="fas fa-link float-right ml-1 text-primary" onClick={_ => {
                                         context.getAllTaggedContent(null)
                                         context.getExpression(content.expression_id)
                                     }}/>}
@@ -91,7 +118,8 @@ function TaggedContent({tags, forLand = false}) {
                 </Modal.Header>
 
                 <Modal.Body>
-                    <Form.Control as="textarea" ref={contentRef} rows="10" className="mb-3" defaultValue={currentTag.content}/>
+                    <Form.Control as="textarea" ref={contentRef} rows="10" className="mb-3"
+                                  defaultValue={currentTag.content}/>
                     <Form.Control as="select" ref={tagRef} defaultValue={currentTag.tagId}>
                         {context.flatTags(context.tags, 0).map((tag, i) => <option
                             key={i}
