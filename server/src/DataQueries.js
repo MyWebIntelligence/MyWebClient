@@ -367,7 +367,7 @@ const DataQueries = {
             params = []
 
         if ('expressionId' in req.query) {
-            sql = `SELECT *
+            sql = `SELECT tc.*
                    FROM taggedContent tc
                             JOIN tag t ON t.id = tc.tag_id
                    WHERE expression_id = ?`
