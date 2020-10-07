@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import axios from 'axios'
 import qs from 'qs'
-import { delay } from "./Util"
+import {delay} from "./Util"
 
 export const DEFAULT_RELEVANCE = 0
 export const DEFAULT_DEPTH = 2
@@ -17,9 +17,11 @@ export class ConfigContext extends Component {
             isLoadingExpressions: false,
             lands: [],
             currentDomain: null,
+            currentDomainTS: null,
             currentLand: null,
             expressions: [],
             currentExpression: null,
+            currentExpressionTS: null,
             currentRelevance: DEFAULT_RELEVANCE,
             minRelevance: 0,
             maxRelevance: 0,
@@ -35,9 +37,13 @@ export class ConfigContext extends Component {
             tags: [],
             taggedContent: [],
             allTaggedContent: null,
+            allTaggedContentTS: null,
+            currentTagFilter: null
         }
         this.state = this.initialState
     }
+
+    ts = _ => Math.round(window.performance.now())
 
     setDb = value => {
         let state = this.initialState
@@ -155,7 +161,7 @@ export class ConfigContext extends Component {
         } else {
             axios.get(`/api/domain?id=${id}`).then(res => {
                 console.log(`Loaded domain #${id}`)
-                this.setState({currentDomain: res.data})
+                this.setState({currentDomain: res.data, currentDomainTS: this.ts()})
             })
         }
     }
@@ -169,16 +175,16 @@ export class ConfigContext extends Component {
         } else {
             axios.get(`/api/expression?id=${id}`).then(res => {
                 console.log(`Loaded expression #${id}`)
-                this.setState({ currentExpression: res.data })
-                this.getTaggedContent({ expressionId: id })
+                this.setState({currentExpression: res.data, currentExpressionTS: this.ts()})
+                this.getTaggedContent({expressionId: id})
             })
         }
     }
 
     deleteExpression = id => {
-        this.setState({ isLoadingExpressions: true })
+        this.setState({isLoadingExpressions: true})
         const ids = {id: id}
-        axios.get(`/api/deleteExpression?${qs.stringify(ids, { encode: false, arrayFormat: 'brackets' })}`).then(_ => {
+        axios.get(`/api/deleteExpression?${qs.stringify(ids, {encode: false, arrayFormat: 'brackets'})}`).then(_ => {
             console.log(`Loaded expression #${id}`)
         })
     }
@@ -251,7 +257,8 @@ export class ConfigContext extends Component {
                 const expression = state.currentExpression
                 expression.readable = res.data
                 return {
-                    currentExpression: expression
+                    currentExpression: expression,
+                    currentExpressionTS: this.ts(),
                 }
             })
             return res.data
@@ -287,11 +294,11 @@ export class ConfigContext extends Component {
 
     getTags = landId => {
         if (landId === null) {
-            this.setState({ tags: [] })
+            this.setState({tags: []})
         } else {
             axios.get(`/api/tags?${qs.stringify({landId: landId})}`).then(res => {
                 console.log(`Loaded tags from land #${landId}`)
-                this.setState({ tags: res.data })
+                this.setState({tags: res.data})
             })
         }
     }
@@ -319,7 +326,7 @@ export class ConfigContext extends Component {
                     return true
                 }
 
-                return tagsHaveChanged(tag.children, b[i].children, d+1)
+                return tagsHaveChanged(tag.children, b[i].children, d + 1)
             })
         }
 
@@ -331,12 +338,12 @@ export class ConfigContext extends Component {
                 console.log("Tags saved")
                 this.getTags(this.state.currentLand.id)
                 if (this.state.currentExpression !== null) {
-                    this.getTaggedContent({ expressionId: this.state.currentExpression.id })
+                    this.getTaggedContent({expressionId: this.state.currentExpression.id})
                 }
             })
         }
 
-        this.setState({ tags: tags })
+        this.setState({tags: tags})
     }
 
     updateTag = tag => {
@@ -353,24 +360,24 @@ export class ConfigContext extends Component {
 
     getTaggedContent = params => {
         if (params === null) {
-            this.setState({ taggedContent: [] })
+            this.setState({taggedContent: []})
         } else {
             const param = qs.stringify(params)
             axios.get(`/api/taggedContent?${param}`).then(res => {
                 console.log(`Loaded tagged content for ${param}`)
-                this.setState({ taggedContent: res.data })
+                this.setState({taggedContent: res.data})
             })
         }
     }
 
     getAllTaggedContent = params => {
         if (params === null) {
-            this.setState({ allTaggedContent: null })
+            this.setState({allTaggedContent: null})
         } else {
             const param = qs.stringify(params)
             axios.get(`/api/taggedContent?${param}`).then(res => {
                 console.log(`Loaded tagged content for ${param}`)
-                this.setState({ allTaggedContent: res.data })
+                this.setState({allTaggedContent: res.data, allTaggedContentTS: this.ts()})
             })
         }
     }
@@ -378,9 +385,9 @@ export class ConfigContext extends Component {
     deleteTaggedContent = (taggedContentId, reloadAll = false) => {
         axios.get(`/api/deleteTaggedContent?id=${taggedContentId}`).then(_ => {
             if (reloadAll === true) {
-                this.getAllTaggedContent({ landId: this.state.currentLand.id })
+                this.getAllTaggedContent({landId: this.state.currentLand.id})
             } else {
-                this.getTaggedContent({ expressionId: this.state.currentExpression.id })
+                this.getTaggedContent({expressionId: this.state.currentExpression.id})
             }
         })
     }
@@ -421,7 +428,7 @@ export class ConfigContext extends Component {
         }).then(res => {
             if (res.data === true) {
                 console.log(`Saved tagged content`)
-                this.getTaggedContent({ expressionId: expressionId })
+                this.getTaggedContent({expressionId: expressionId})
             }
         })
     }
@@ -433,13 +440,23 @@ export class ConfigContext extends Component {
             text: text,
         }).then(res => {
             console.log(`Updated tag content #${contentId}`)
+
+            let params = {}
+            if (this.state.currentTagFilter !== null) {
+                params.tagId = this.state.currentTagFilter
+            }
+
             if (reloadAll === true) {
-                this.getAllTaggedContent({landId: this.state.currentLand.id})
+                this.getAllTaggedContent({landId: this.state.currentLand.id, ...params})
             } else {
-                this.getTaggedContent({expressionId: this.state.currentExpression.id})
+                this.getTaggedContent({expressionId: this.state.currentExpression.id, ...params})
             }
             return res.data
         })
+    }
+
+    setTagFilter = tagId => {
+        this.setState({currentTagFilter: tagId})
     }
 
     notFocused = _ => document.querySelectorAll('input:focus, textarea:focus').length === 0
@@ -474,6 +491,7 @@ export class ConfigContext extends Component {
             deleteTaggedContent: this.deleteTaggedContent,
             categorizeTaggedContent: this.categorizeTaggedContent,
             notFocused: this.notFocused,
+            setTagFilter: this.setTagFilter,
         }
         return (
             <Context.Provider value={state}>

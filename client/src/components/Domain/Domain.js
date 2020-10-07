@@ -5,7 +5,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 
-function Domain() {
+function Domain(props) {
     const context = useContext(Context);
 
     const keyboardControl = useCallback(event => {
@@ -28,7 +28,7 @@ function Domain() {
         }
     }, [keyboardControl])
 
-    return <section className={"Domain" + (context.currentDomain ? " d-block" : "")}>
+    return <section className={"Domain" + (context.currentDomain ? " d-block" : "")} style={props.style}>
         <Row>
             <Col md="8">
                 <h6 className="App-objtype">Domain</h6>

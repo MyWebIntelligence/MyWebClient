@@ -194,9 +194,9 @@ function ExpressionExplorer() {
             </section>
             }
 
-            {context.currentExpression && <Expression/>}
-            {context.currentDomain && <Domain/>}
-            {context.allTaggedContent && <div className="taggedContentExplorer">
+            {context.currentExpression && <Expression style={{zIndex: context.currentExpressionTS}}/>}
+            {context.currentDomain && <Domain style={{zIndex: context.currentDomainTS}}/>}
+            {context.allTaggedContent && <div className="taggedContentExplorer" style={{zIndex: context.allTaggedContentTS}}>
                 <TaggedContent tags={context.allTaggedContent} forLand={true}/>
             </div>}
         </div>

@@ -16,6 +16,7 @@ function TaggedContent({tags, forLand = false}) {
         switch (event.keyCode) {
             case 27: // ESC Close
                 context.getAllTaggedContent(null)
+                context.setTagFilter(null)
                 break
             default:
                 break
@@ -37,6 +38,8 @@ function TaggedContent({tags, forLand = false}) {
     }
 
     const getFiltered = tagId => {
+        context.setTagFilter(tagId)
+
         let params = {}
         if (tagId !== null) {
             params.tagId = tagId
@@ -100,7 +103,6 @@ function TaggedContent({tags, forLand = false}) {
 
                                     {forLand === true &&
                                     <i className="fas fa-link float-right ml-1 text-primary" onClick={_ => {
-                                        context.getAllTaggedContent(null)
                                         context.getExpression(content.expression_id)
                                     }}/>}
 

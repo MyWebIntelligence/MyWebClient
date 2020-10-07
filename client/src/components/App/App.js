@@ -21,7 +21,7 @@ function App() {
                     </div>
                 </aside>
                 <section className="App-view">
-                    <div className="p-3">
+                    <div className="p-3" style={{position: 'relative', zIndex: 1}}>
                         <ExpressionExplorer/>
                     </div>
                 </section>
