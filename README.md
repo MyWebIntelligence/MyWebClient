@@ -58,7 +58,7 @@ to project directory and build image from Dockerfile, automatically named after 
 
 ```
 > cd MyWebClient
-MyWebClient> docker build -t mwiclient:$(git rev-parse --short HEAD) .
+MyWebClient> docker build -t mwiclient:1.0 .
 ```
 
 Run image from project directory, with port mapping and volume mount.
@@ -66,7 +66,7 @@ The path of shared folder may change whether you run docker via Docker CLI, Dock
 Mount path defines what you'll type in application database locator, typically `/data/mwi.db`.
 
 ```
-> docker run -p80:3000 --name mwiclient -v /path/to/hosted/mywi/data:/data mwiclient:<revision_tag>
+> docker run -p80:3000 --name mwiclient -v /path/to/hosted/mywi/data:/data mwiclient:1.0
 ```
 
 Now, you should be able to browse application at your Docker public IP address (given your Docker configuration)
