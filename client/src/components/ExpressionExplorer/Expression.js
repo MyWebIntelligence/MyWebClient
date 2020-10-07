@@ -3,7 +3,7 @@ import {Context} from '../../app/Context'
 import {Button, ButtonGroup, ButtonToolbar, Badge, Container, Row, Col, Form} from "react-bootstrap"
 import TaggedContent from "../TagExplorer/TaggedContent";
 
-function Expression() {
+function Expression(props) {
     const context = useContext(Context)
     const textRef = useRef()
     const highlightsRef = useRef()
@@ -131,7 +131,7 @@ function Expression() {
         setContentChanged(false)
     }
 
-    return <section className={"ExpressionExplorer-details" + (context.currentExpression ? " d-block" : "")}>
+    return <section className={"ExpressionExplorer-details" + (context.currentExpression ? " d-block" : "")} style={props.style}>
         <Row>
             <Col md="8">
                 <h6 className="App-objtype">Expression</h6>
