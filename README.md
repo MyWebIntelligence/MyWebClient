@@ -6,6 +6,41 @@ as it queries its database, you have to install it first and have it to generate
 
 This app actually runs two services concurrently, the ReactJS client itself (GUI) and the server API required to query SQLite database. 
 
+# Installation from Dockerfile
+
+## Requirements
+
+* [Docker](https://www.docker.com/products/docker-desktop)
+
+## Installation
+
+If not already built (check with `docker images` command), or you want to recreate docker image from fresh sources, go 
+to project directory and build image from Dockerfile, automatically named after code version.
+
+```
+> cd MyWebClient
+MyWebClient> docker build -t mwiclient:1.0 .
+```
+
+Run image from project directory, with port mapping and volume mount.
+The path of shared folder may change whether you run docker via Docker CLI, Docker Desktop, Docker Toolbox or anything else.
+Mount path defines what you'll type in application database locator, typically `/data/mwi.db`.
+
+```
+> docker run -p80:3000 --name mwiclient -v /path/to/hosted/mywi/data:/data mwiclient:1.0
+```
+
+Now, you should be able to browse application at your Docker public IP address (given your Docker configuration)
+
+## Utils
+
+Show running containers to know current container id
+
+```
+> docker ps
+```
+
+
 # Installation from source
 
 ## Requirements
@@ -45,36 +80,4 @@ Inside project root directory, launch server and client app concurrently
 MyWebClient> yarn standalone
 ```
 
-# Installation from Dockerfile
 
-## Requirements
-
-* [Docker](https://www.docker.com/products/docker-desktop)
-
-## Installation
-
-If not already built (check with `docker images` command), or you want to recreate docker image from fresh sources, go 
-to project directory and build image from Dockerfile, automatically named after code version.
-
-```
-> cd MyWebClient
-MyWebClient> docker build -t mwiclient:1.0 .
-```
-
-Run image from project directory, with port mapping and volume mount.
-The path of shared folder may change whether you run docker via Docker CLI, Docker Desktop, Docker Toolbox or anything else.
-Mount path defines what you'll type in application database locator, typically `/data/mwi.db`.
-
-```
-> docker run -p80:3000 --name mwiclient -v /path/to/hosted/mywi/data:/data mwiclient:1.0
-```
-
-Now, you should be able to browse application at your Docker public IP address (given your Docker configuration)
-
-## Utils
-
-Show running containers to know current container id
-
-```
-> docker ps
-```
