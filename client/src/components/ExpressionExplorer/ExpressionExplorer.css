@@ -90,12 +90,15 @@
     z-index: 2;
 }
 
-.ExpressionExplorer-highlit, .ExpressionExplorer-highlit-backdrop, .ExpressionExplorer-readable {
+.ExpressionExplorer-content,
+.ExpressionExplorer-content-readable,
+.ExpressionExplorer-content-editable {
     height: 50vh !important;
     width: 100%;
 }
 
-.ExpressionExplorer-readable {
+.ExpressionExplorer-content-readable,
+.ExpressionExplorer-content-editable {
     overflow-y: scroll;
 }
 
@@ -103,35 +106,14 @@
     height: 30vh !important;
 }
 
-.ExpressionExplorer-highlit {
+.ExpressionExplorer-content {
     position: relative;
 }
 
-.ExpressionExplorer-highlit textarea {
+.ExpressionExplorer-content textarea {
     background-color: transparent;
     color: #444;
     margin: 0;
     position: absolute;
     z-index: 2;
-}
-
-.ExpressionExplorer-highlit mark {
-    background-color: #007bff;
-    color: transparent;
-    opacity: .35;
-}
-
-.ExpressionExplorer-highlit-backdrop {
-    border: 1px solid transparent;
-    height: auto;
-    overflow: auto;
-    padding: .375rem .75rem;
-    position: absolute;
-    z-index: 1;
-}
-
-.ExpressionExplorer-highlights {
-    color: transparent;
-    white-space: pre-wrap;
-    word-wrap: break-word;
 }

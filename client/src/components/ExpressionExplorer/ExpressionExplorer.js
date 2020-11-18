@@ -86,8 +86,18 @@ function ExpressionExplorer() {
         return (column === context.sortColumn) ? <span className="text-primary">{label} {sortHint}</span> : label
     }
 
-    const noResult = <div className="d-flex align-items-center justify-content-center h-100">
-        <h2 className="text-muted"><i className="fas fa-exclamation-triangle"/> Select land or change filters</h2>
+    const noResult = <div className="d-flex flex-column align-items-center justify-content-center h-100">
+        <div className="py-5">
+            <span className="spinner-border text-muted" role="status">
+                <span className="sr-only">Loading...</span>
+            </span>
+        </div>
+        {context.connecting &&
+        <h2 className="text-muted">Connecting database</h2>
+        }
+        {context.connecting ||
+        <h2 className="text-muted">Setting up application</h2>
+        }
     </div>
 
     return (
@@ -175,7 +185,7 @@ function ExpressionExplorer() {
                         </tr>
                     )}
                     {context.expressions.length > 0 || <tr>
-                        <td colSpan="5"><h3 className="text-muted">No results</h3></td>
+                        <td colSpan="5" className="text-center"><h3 className="text-muted">No results</h3></td>
                     </tr>}
                     </tbody>
 

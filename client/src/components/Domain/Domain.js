@@ -36,7 +36,7 @@ function Domain(props) {
                 <h5 className="text-muted">{context.currentDomain.title}</h5>
             </Col>
             <Col md="4" className="d-flex align-items-center justify-content-end">
-                <Button size="sm" variant="outline-danger" className="rounded-pill mx-1"
+                <Button size="sm" className="rounded-pill mx-1"
                         onClick={_ => context.getDomain(null)}>
                     <i className="fas fa-times" />
                 </Button>

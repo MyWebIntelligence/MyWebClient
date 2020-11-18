@@ -40,6 +40,45 @@ Show running containers to know current container id
 > docker ps
 ```
 
+# Installation from source
+
+## Requirements
+
+* [Git](https://git-scm.com/downloads)
+* [NodeJS](https://nodejs.org/en/download/)  v12.16
+* [Yarn](https://classic.yarnpkg.com/en/docs/install) package manager v1.22
+* [MyWebIntelligencePython](https://github.com/MyWebIntelligence/MyWebIntelligencePython) 
+
+## Installation
+
+Clone project
+
+```
+> git clone https://github.com/MyWebIntelligence/MyWebClient.git
+```
+
+Enter project directory
+
+```
+> cd MyWebClient
+```
+
+Install dependencies
+
+```
+MyWebClient> yarn install
+```
+
+Client dependencies should install subsequently (postinstall lifecycle event)
+
+# Start application
+
+Inside project root directory, launch server and client app concurrently
+
+```
+MyWebClient> yarn standalone
+```
+
 
 # Installation from source
 
