@@ -61,7 +61,7 @@ function TaggedContent({tags, forLand = false}) {
                     </div>}
                 </Col>
                 <Col md="4" className="d-flex align-items-start justify-content-end">
-                    <Button size="sm" variant="outline-danger" className="rounded-pill mx-1"
+                    <Button size="sm" className="rounded-pill mx-1"
                             onClick={_ => context.getAllTaggedContent(null)}>
                         <i className="fas fa-times"/>
                     </Button>

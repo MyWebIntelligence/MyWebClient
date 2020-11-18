@@ -1,13 +1,12 @@
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react"
 import {Context} from '../../app/Context'
-import {Button, ButtonGroup, ButtonToolbar, Badge, Container, Row, Col, Form} from "react-bootstrap"
-import TaggedContent from "../TagExplorer/TaggedContent";
+import {Badge, Button, ButtonGroup, ButtonToolbar, Col, Container, Form, Row} from "react-bootstrap"
+import TaggedContent from "../TagExplorer/TaggedContent"
+import marked from 'marked'
 
 function Expression(props) {
     const context = useContext(Context)
     const textRef = useRef()
-    const highlightsRef = useRef()
-    const backdropRef = useRef()
     const tagRef = useRef()
 
     const [content, setContent] = useState(context.currentExpression.readable)
@@ -15,6 +14,7 @@ function Expression(props) {
     const [textSelection, setTextSelection] = useState()
     const [selectionStart, setSelectionStart] = useState()
     const [selectionEnd, setSelectionEnd] = useState()
+    const [editMode, setEditMode] = useState(false)
 
     useEffect(() => {
         setContent(context.currentExpression.readable)
@@ -73,8 +73,6 @@ function Expression(props) {
 
         const textChanged = content !== context.currentExpression.readable
         setContentChanged(textChanged)
-
-        highlightsRef.current.innerHTML = applyHighlights(content)
     }
 
     const selectText = event => {
@@ -83,22 +81,6 @@ function Expression(props) {
         setSelectionStart(event.currentTarget.selectionStart)
         setSelectionEnd(event.currentTarget.selectionEnd)
     }
-
-    /**
-     * @todo implement text highlight
-     */
-    function applyHighlights(text) {
-        return text
-            .replace(/\n$/g, '\n\n')
-            .replace(`/{text}\b/gi`, '<mark>$&</mark>')
-    }
-
-    const handleScroll = _ => {
-        backdropRef.current.scrollTop = textRef.current.scrollTop
-    }
-    /**
-     * End todo
-     */
 
     const deleteExpression = _ => {
         if (window.confirm("Are you sure to delete expression?")) {
@@ -160,7 +142,7 @@ function Expression(props) {
                         onClick={_ => context.getNextExpression(context.currentExpression.id, context.currentExpression.landId)}>
                     <i className="fas fa-arrow-right"/>
                 </Button>
-                <Button size="sm" variant="outline-danger" className="rounded-pill mx-1"
+                <Button size="sm" className="rounded-pill mx-1"
                         onClick={_ => context.getExpression(null)}>
                     <i className="fas fa-times"/>
                 </Button>
@@ -177,25 +159,26 @@ function Expression(props) {
             <Row>
                 <Col md="8">
                     <Form.Group controlId={"expressionForm" + context.currentExpression.id}>
-                        <div className="ExpressionExplorer-highlit">
-                            <div ref={backdropRef} className="ExpressionExplorer-highlit-backdrop">
-                                <div className="ExpressionExplorer-highlights" ref={highlightsRef}/>
-                            </div>
-                            <Form.Control as="textarea" className="ExpressionExplorer-readable" ref={textRef}
+                        <div className="ExpressionExplorer-content">
+                            {editMode &&
+                            <Form.Control as="textarea" className="ExpressionExplorer-content-editable" ref={textRef}
                                           value={content}
-                                          onChange={onTextChange} onMouseUp={selectText} onScroll={handleScroll}/>
+                                          onChange={onTextChange} onMouseUp={selectText}/>}
+                            {!editMode && <div dangerouslySetInnerHTML={{__html: marked(content)}} className="ExpressionExplorer-content-readable form-control"/>}
                         </div>
                         <div className="my-3">
                             <ButtonToolbar>
                                 <ButtonGroup className="mr-2">
-                                    <Button
-                                        onClick={getReadable}><u>R</u>eadabilize</Button>
+                                    <Button onClick={_ => setEditMode(!editMode)}>Edit</Button>
+                                </ButtonGroup>
+                                <ButtonGroup className="mr-2">
+                                    <Button onClick={getReadable} disabled={!editMode}><u>R</u>eadabilize</Button>
                                 </ButtonGroup>
                                 <ButtonGroup className="mr-2">
                                     <Button disabled={!contentChanged}
-                                            onClick={saveReadable}><u>S</u>ave</Button>
+                                            onClick={saveReadable} disabled={!editMode}><u>S</u>ave</Button>
                                     <Button disabled={!contentChanged}
-                                            onClick={reloadExpression}>Reload</Button>
+                                            onClick={reloadExpression} disabled={!editMode}>Reload</Button>
                                 </ButtonGroup>
                                 <ButtonGroup>
                                     <Button variant="outline-danger"
