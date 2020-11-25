@@ -14,6 +14,19 @@ This app actually runs two services concurrently, the ReactJS client itself (GUI
 
 ## Installation
 
+
+Clone project
+
+```
+> git clone https://github.com/MyWebIntelligence/MyWebClient.git
+```
+
+Enter project directory
+
+```
+> cd MyWebClient
+```
+
 If not already built (check with `docker images` command), or you want to recreate docker image from fresh sources, go 
 to project directory and build image from Dockerfile, automatically named after code version.
 
