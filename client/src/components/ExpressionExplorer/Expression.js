@@ -38,6 +38,9 @@ function Expression(props) {
                     saveBeforeQuit()
                     context.getNextExpression(context.currentExpression.id, context.currentExpression.landId)
                     break
+                case 69: // E Edit readable
+                    setEditMode(!editMode)
+                    break
                 case 68: // D Delete expression
                     deleteExpression()
                     break
@@ -45,7 +48,9 @@ function Expression(props) {
                     getReadable()
                     break
                 case 83: // S Save expression
-                    saveReadable()
+                    if (contentChanged) {
+                        saveReadable()
+                    }
                     break
                 default:
                     break
@@ -98,7 +103,8 @@ function Expression(props) {
         const content = context.getReadable(context.currentExpression.id)
         const hasChanged = currentContent !== content
         setContentChanged(hasChanged)
-        if (hasChanged) {
+
+        if (content && hasChanged) {
             setContent(content)
         }
     }
@@ -160,25 +166,30 @@ function Expression(props) {
                 <Col md="8">
                     <Form.Group controlId={"expressionForm" + context.currentExpression.id}>
                         <div className="ExpressionExplorer-content">
-                            {editMode &&
-                            <Form.Control as="textarea" className="ExpressionExplorer-content-editable" ref={textRef}
-                                          value={content}
-                                          onChange={onTextChange} onMouseUp={selectText}/>}
-                            {!editMode && <div dangerouslySetInnerHTML={{__html: marked(content)}} className="ExpressionExplorer-content-readable form-control"/>}
+                            {editMode
+                                ? <Form.Control as="textarea"
+                                                ref={textRef}
+                                                value={content}
+                                                className="ExpressionExplorer-content-editable"
+                                                onChange={onTextChange}
+                                                onMouseUp={selectText}/>
+                                : <div dangerouslySetInnerHTML={{__html: marked(content)}}
+                                       className="ExpressionExplorer-content-readable form-control"/>
+                            }
                         </div>
                         <div className="my-3">
                             <ButtonToolbar>
                                 <ButtonGroup className="mr-2">
-                                    <Button onClick={_ => setEditMode(!editMode)}>Edit</Button>
+                                    <Button onClick={_ => setEditMode(!editMode)} variant={editMode ? 'success' : 'primary'}>{editMode ? 'E' : <u>E</u>}dit</Button>
                                 </ButtonGroup>
                                 <ButtonGroup className="mr-2">
-                                    <Button onClick={getReadable} disabled={!editMode}><u>R</u>eadabilize</Button>
+                                    <Button onClick={getReadable}><u>R</u>eadabilize</Button>
                                 </ButtonGroup>
                                 <ButtonGroup className="mr-2">
-                                    <Button disabled={!contentChanged}
-                                            onClick={saveReadable} disabled={!editMode}><u>S</u>ave</Button>
-                                    <Button disabled={!contentChanged}
-                                            onClick={reloadExpression} disabled={!editMode}>Reload</Button>
+                                    <Button onClick={saveReadable}
+                                            disabled={!contentChanged}><u>S</u>ave</Button>
+                                    <Button onClick={reloadExpression}
+                                            disabled={!contentChanged}>Reload</Button>
                                 </ButtonGroup>
                                 <ButtonGroup>
                                     <Button variant="outline-danger"
@@ -197,13 +208,10 @@ function Expression(props) {
 
                     <h5>Content tagging</h5>
 
-                    {!textSelection && <div>
-                        {context.tags.length > 0 &&
-                        <p className="my-3 alert alert-warning">Select text in expression content.</p>}
-                        {context.tags.length === 0 &&
-                        <p className="my-3 alert alert-warning">You have to create tags before tagging content.</p>}
-                    </div>}
-
+                    {context.tags.length === 0
+                        ? <p className="my-3 alert alert-warning">You have to create tags before tagging content.</p>
+                        : <>{!textSelection && <p className="my-3 alert alert-warning">Select text in expression content.</p>}</>
+                    }
                     {!textSelection || <div className="alert alert-success">
                         <h6>Select tag</h6>
                         <p className="App-text-excerpt my-2">{textSelection}</p>
@@ -227,6 +235,8 @@ function Expression(props) {
                             </div>
                         </Form>
                     </div>}
+
+                    {!editMode && <p>Start tagging content in edit mode <Button onClick={_ => setEditMode(!editMode)} size="sm">Edit mode</Button></p>}
 
                     <TaggedContent tags={context.taggedContent}/>
                 </Col>

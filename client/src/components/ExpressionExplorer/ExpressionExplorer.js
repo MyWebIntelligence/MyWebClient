@@ -86,18 +86,17 @@ function ExpressionExplorer() {
         return (column === context.sortColumn) ? <span className="text-primary">{label} {sortHint}</span> : label
     }
 
+    const spinner = <div className="py-5">
+        <span className="spinner-border text-muted" role="status">
+            <span className="sr-only">Loading...</span>
+        </span>
+    </div>
+
+
     const noResult = <div className="d-flex flex-column align-items-center justify-content-center h-100">
-        <div className="py-5">
-            <span className="spinner-border text-muted" role="status">
-                <span className="sr-only">Loading...</span>
-            </span>
-        </div>
-        {context.connecting &&
-        <h2 className="text-muted">Connecting database</h2>
-        }
-        {context.connecting ||
-        <h2 className="text-muted">Setting up application</h2>
-        }
+        {context.connecting && <>{spinner}<h2 className="text-muted">Connecting database</h2></>}
+        {!(context.connecting && context.connectionError) || <>{spinner}<h2 className="text-muted">Setting up application</h2></>}
+        {context.connectionError && <h2 className="text-muted">Can't connect to database, please check path</h2>}
     </div>
 
     return (

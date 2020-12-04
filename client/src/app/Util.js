@@ -7,4 +7,4 @@ const delay = (time, callback, arg) => {
     }, time, arg)
 }
 
-module.exports = { delay }
+module.exports = {delay}
