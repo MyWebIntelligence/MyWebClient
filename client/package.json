@@ -12,7 +12,7 @@
     "bootstrap": "^4.4.1",
     "jquery": "3.5.1",
     "marked": "^1.2.3",
-    "popper.js": "1.16.0",
+    "popper.js": "^1.16.1",
     "prop-types": "^15.7.2",
     "qs": "^6.9.4",
     "react": "^16.12.0",
