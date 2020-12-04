@@ -117,3 +117,9 @@
     position: absolute;
     z-index: 2;
 }
+
+.ExpressionExplorer-content-readable img {
+    display: block;
+    margin: 0 auto;
+    width: 80%;
+}

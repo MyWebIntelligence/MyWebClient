@@ -14,6 +14,7 @@ export class ConfigContext extends Component {
         this.initialState = {
             isConnected: false,
             connecting: false,
+            connectionError: false,
             isLoadingExpressions: false,
             lands: [],
             currentDomain: null,
@@ -45,14 +46,14 @@ export class ConfigContext extends Component {
 
     ts = _ => Math.round(window.performance.now())
 
-    setDb = value => {
+    setDb = dbPath => {
         let state = this.initialState
         state.connecting = true
         this.setState(state)
 
-        if (value) {
-            localStorage.setItem('dbFile', value.toString())
-            axios.get('/api/connect?db=' + encodeURI(value)).then(res => {
+        if (dbPath) {
+            localStorage.setItem('dbFile', dbPath.toString())
+            axios.get('/api/connect?db=' + encodeURI(dbPath)).then(res => {
                 if (res.data === true) {
                     axios.get(`/api/lands`).then(res => {
                         this.setState({
@@ -67,9 +68,16 @@ export class ConfigContext extends Component {
                         })
                         this.getLand(res.data[0].id)
                     })
+                } else {
+                    this.setState({
+                        isConnected: false,
+                        connecting: false,
+                        connectionError: true,
+                    })
                 }
+
                 this.setState({
-                    isConnected: res.data
+                    isConnected: res.data,
                 })
             })
         } else {
