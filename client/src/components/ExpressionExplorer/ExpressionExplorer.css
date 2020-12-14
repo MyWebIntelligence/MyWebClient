@@ -1,11 +1,11 @@
 .ExpressionExplorer {
-    height: calc(100vh - 120px);
+    height: calc(100vh - 100px);
     position: relative;
 }
 
 .ExpressionExplorer-list {
     bottom: 0;
-    height: calc(100vh - 128px);
+    height: calc(100vh - 100px);
     left: 0;
     position: absolute;
     right: 0;
@@ -20,7 +20,7 @@
 .ExpressionExplorer-list table {
     display: flex;
     flex-flow: column;
-    height: calc(100% - 50px);
+    height: calc(100vh - 168px);
     position: relative;
     width: 100%;
 }
@@ -83,6 +83,7 @@
     background: #fff;
     bottom: 0;
     display: none;
+    height: calc(100vh - 100px);
     left: 0;
     position: absolute;
     right: 0;

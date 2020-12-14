@@ -1,7 +1,7 @@
 .taggedContentExplorer {
     background: #fff;
     bottom: 0;
-    height: calc(100vh - 120px);
+    height: calc(100vh - 100px);
     left: 0;
     position: absolute;
     right: 0;
@@ -11,6 +11,12 @@
 
 .taggedContent {
     background: #fff;
+    height: inherit;
+}
+
+.taggedContentExplorer .taggedContent .panel {
+    height: calc(100vh - 220px);
+    overflow-y: scroll;
 }
 
 .taggedContent ul {

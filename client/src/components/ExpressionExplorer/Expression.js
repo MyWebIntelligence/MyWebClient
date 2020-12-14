@@ -183,17 +183,19 @@ function Expression(props) {
                                     <Button onClick={_ => setEditMode(!editMode)} variant={editMode ? 'success' : 'primary'}>{editMode ? 'E' : <u>E</u>}dit</Button>
                                 </ButtonGroup>
                                 <ButtonGroup className="mr-2">
-                                    <Button onClick={getReadable}><u>R</u>eadabilize</Button>
+                                    <Button onClick={getReadable}
+                                            disabled={!editMode}><u>R</u>eadabilize</Button>
                                 </ButtonGroup>
                                 <ButtonGroup className="mr-2">
                                     <Button onClick={saveReadable}
-                                            disabled={!contentChanged}><u>S</u>ave</Button>
+                                            disabled={!(editMode && contentChanged)}><u>S</u>ave</Button>
                                     <Button onClick={reloadExpression}
-                                            disabled={!contentChanged}>Reload</Button>
+                                            disabled={!(editMode && contentChanged)}>Reload</Button>
                                 </ButtonGroup>
                                 <ButtonGroup>
                                     <Button variant="outline-danger"
-                                            onClick={_ => deleteExpression(context.currentExpression.id)}><u>D</u>elete</Button>
+                                            onClick={_ => deleteExpression(context.currentExpression.id)}
+                                            disabled={!editMode}><u>D</u>elete</Button>
                                 </ButtonGroup>
                             </ButtonToolbar>
                         </div>

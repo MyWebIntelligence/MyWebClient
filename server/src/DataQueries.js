@@ -218,15 +218,19 @@ const DataQueries = {
 
     saveReadable: (req, res) => {
         try {
-            db.run('UPDATE expression SET readable = ? WHERE id = ?', [req.body.content, req.body.id], err => {
-                if (err) {
-                    console.log(`Error : ${err.code} on processing readable #${req.body.id}`)
-                } else {
-                    const byteSize = Buffer.from(req.body.content).length
-                    console.log(`Saved ${byteSize} bytes from readable #${req.body.id}`)
-                    res.json(true)
+            db.run(
+                'UPDATE expression SET readable = ?, readable_at = ? WHERE id = ?',
+                [req.body.content, (new Date()).toISOString(), req.body.id],
+                err => {
+                    if (err) {
+                        console.log(`Error : ${err.code} on processing readable #${req.body.id}`)
+                    } else {
+                        const byteSize = Buffer.from(req.body.content).length
+                        console.log(`Saved ${byteSize} bytes from readable #${req.body.id}`)
+                        res.json(true)
+                    }
                 }
-            })
+            )
         } catch (err) {
             console.log(`Error : undefined content for expression #${req.body.id}`)
             res.json(false)
@@ -267,17 +271,7 @@ const DataQueries = {
             })
             return tree
         }
-        /*
-        const sql = `SELECT id,
-                            land_id,
-                            parent_id,
-                            name,
-                            sorting,
-                            color
-                     FROM tag
-                     WHERE land_id = ?
-                     ORDER BY parent_id, sorting`
-        */
+
         const sql = `WITH RECURSIVE tagPath AS (
             SELECT id,
                    name
