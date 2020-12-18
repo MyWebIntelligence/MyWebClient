@@ -1,6 +1,6 @@
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react"
 import {Context} from '../../app/Context'
-import {Badge, Button, ButtonGroup, ButtonToolbar, Col, Container, Form, Row} from "react-bootstrap"
+import {Badge, Button, ButtonGroup, ButtonToolbar, Carousel, Col, Container, Form, Row} from "react-bootstrap"
 import TaggedContent from "../TagExplorer/TaggedContent"
 import marked from 'marked'
 
@@ -119,6 +119,11 @@ function Expression(props) {
         setContentChanged(false)
     }
 
+    const deleteMedia = (event, image) => {
+        context.deleteMedia(image)
+        reloadExpression()
+    }
+
     return <section className={"ExpressionExplorer-details" + (context.currentExpression ? " d-block" : "")} style={props.style}>
         <Row>
             <Col md="8">
@@ -208,6 +213,23 @@ function Expression(props) {
 
                     <hr/>
 
+                    <h5>Media</h5>
+
+                    {context.currentExpression.images !== null && <div className="panel py-3 bg-light">
+                        <Carousel keyboard={false} interval={null}>
+                            {context.currentExpression.images.split(',').map((image, index) => <Carousel.Item key={index}>
+                                <img src={image} alt=""/>
+                                <Carousel.Caption>
+                                    <i className="fas fa-trash text-danger"
+                                       onClick={event => deleteMedia(event, image)}/>
+                                </Carousel.Caption>
+                            </Carousel.Item>)}
+                        </Carousel>
+                    </div>}
+                    {context.currentExpression.images === null && <p className="text-muted">No media related to this expression</p>}
+
+                    <hr/>
+
                     <h5>Content tagging</h5>
 
                     {context.tags.length === 0
@@ -238,7 +260,7 @@ function Expression(props) {
                         </Form>
                     </div>}
 
-                    {!editMode && <p>Start tagging content in edit mode <Button onClick={_ => setEditMode(!editMode)} size="sm">Edit mode</Button></p>}
+                    {!editMode && <p>Start tagging content in <Button onClick={_ => setEditMode(!editMode)} size="sm">Edit mode</Button></p>}
 
                     <TaggedContent tags={context.taggedContent}/>
                 </Col>
