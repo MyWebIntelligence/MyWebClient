@@ -469,6 +469,16 @@ export class ConfigContext extends Component {
 
     notFocused = _ => document.querySelectorAll('input:focus, textarea:focus').length === 0
 
+    deleteMedia = (image) => {
+        axios.post('/api/deleteMedia', {
+            expressionId: this.state.currentExpression.id,
+            url: image,
+        }).then(res => {
+            console.log(`Deleted expression #${this.state.currentExpression.id} media ${image}`)
+            return res
+        })
+    }
+
     render() {
         const state = {
             ...this.state,
@@ -500,6 +510,7 @@ export class ConfigContext extends Component {
             categorizeTaggedContent: this.categorizeTaggedContent,
             notFocused: this.notFocused,
             setTagFilter: this.setTagFilter,
+            deleteMedia: this.deleteMedia,
         }
         return (
             <Context.Provider value={state}>

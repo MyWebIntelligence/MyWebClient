@@ -101,4 +101,9 @@ app.post('/api/updateTagContent', (req, res) => {
     DataQueries.updateTagContent(req, res)
 })
 
+app.post('/api/deleteMedia', (req, res) => {
+    console.log(`Deleting media ${req.url}`)
+    DataQueries.deleteMedia(req, res)
+})
+
 app.listen(port, () => console.log(`Listening on port ${port}`))

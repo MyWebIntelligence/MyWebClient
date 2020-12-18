@@ -412,6 +412,13 @@ const DataQueries = {
             const response = !err ? true : err
             res.json(response)
         })
+    },
+
+    deleteMedia: (req, res) => {
+        db.run('DELETE FROM media WHERE url = ? AND expression_id = ?', [req.body.url, req.body.expressionId], (err) => {
+            const response = !err ? true : err
+            res.json(response)
+        })
     }
 }
 
