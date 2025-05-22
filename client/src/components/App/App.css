@@ -90,3 +90,8 @@ html {
     background: white;
 }
  */
+
+/* Custom styling for the "chapeau" text */
+.lead {
+  font-weight: 700 !important; /* Bold, !important to override Bootstrap if necessary */
+}

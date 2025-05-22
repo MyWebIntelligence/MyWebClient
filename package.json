@@ -5,7 +5,7 @@
   "scripts": {
     "postinstall": "cd client && yarn install",
     "client": "cd client && NODE_OPTIONS=--openssl-legacy-provider yarn start",
-    "server": "nodemon --exec babel-node server/src/start.js",
+    "server": "NODE_OPTIONS=--openssl-legacy-provider nodemon --exec babel-node server/src/start.js",
     "standalone": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\""
   },
   "dependencies": {
