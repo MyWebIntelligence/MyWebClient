@@ -159,7 +159,7 @@ function Expression(props) {
 
     return <section className={"ExpressionExplorer-details" + (context.currentExpression ? " d-block" : "")} style={props.style}>
         <Row>
-            <Col md="8">
+            <Col md="9">
                 <h6 className="App-objtype">Expression</h6>
                 <div className="my-2">
                     <h5 className="m-0">
@@ -244,40 +244,6 @@ function Expression(props) {
 
                     <hr/>
 
-                    <h5>Content tagging</h5>
-
-                    {context.tags.length === 0
-                        ? <p className="my-3 alert alert-warning">You have to create tags before tagging content.</p>
-                        : <>{!textSelection && <p className="my-3 alert alert-warning">Select text in expression content.</p>}</>
-                    }
-                    {!textSelection || <div className="alert alert-success">
-                        <h6>Select tag</h6>
-                        <p className="App-text-excerpt my-2">{textSelection}</p>
-                        <Form>
-                            <div className="input-group">
-                                <Form.Control as="select" ref={tagRef}>
-                                    {context.flatTags(context.tags, 0).map((tag, i) => <option
-                                        key={i}
-                                        value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.name}</option>)}
-                                </Form.Control>
-                                <div className="input-group-append">
-                                    <Button onClick={_ => {
-                                        context.tagContent(
-                                            tagRef.current.value,
-                                            context.currentExpression.id,
-                                            textSelection,
-                                            selectionStart,
-                                            selectionEnd)
-                                    }}>Save</Button>
-                                </div>
-                            </div>
-                        </Form>
-                    </div>}
-
-                    {/* {!editMode && <p>Start tagging content in <Button onClick={_ => setEditMode(!editMode)} size="sm">Edit mode</Button></p>} */}
-
-                    <TaggedContent tags={context.taggedContent}/>
-
                     <div className="my-3">
                         <ButtonToolbar>
                             <ButtonGroup className="mr-2">
@@ -299,6 +265,44 @@ function Expression(props) {
                                         disabled={!editMode}><u>D</u>elete</Button>
                             </ButtonGroup>
                         </ButtonToolbar>
+                    </div>
+
+                    <hr/>
+                    
+                    <div className="sticky-content-tagging">
+                        <h5>Content tagging</h5>
+
+                        {context.tags.length === 0
+                            ? <p className="my-3 alert alert-warning">You have to create tags before tagging content.</p>
+                            : <>{!textSelection && <p className="my-3 alert alert-warning">Select text in expression content.</p>}</>
+                        }
+                        {!textSelection || <div className="alert alert-success">
+                            <h6>Select tag</h6>
+                            <p className="App-text-excerpt my-2">{textSelection}</p>
+                            <Form>
+                                <div className="input-group">
+                                    <Form.Control as="select" ref={tagRef}>
+                                        {context.flatTags(context.tags, 0).map((tag, i) => <option
+                                            key={i}
+                                            value={tag.id}>{String.fromCharCode(160).repeat(tag.depth)} {tag.name}</option>)}
+                                    </Form.Control>
+                                    <div className="input-group-append">
+                                        <Button onClick={_ => {
+                                            context.tagContent(
+                                                tagRef.current.value,
+                                                context.currentExpression.id,
+                                                textSelection,
+                                                selectionStart,
+                                                selectionEnd)
+                                        }}>Save</Button>
+                                    </div>
+                                </div>
+                            </Form>
+                        </div>}
+
+                        {/* {!editMode && <p>Start tagging content in <Button onClick={_ => setEditMode(!editMode)} size="sm">Edit mode</Button></p>} */}
+
+                        <TaggedContent tags={context.taggedContent}/>
                     </div>
                 </Col>
             </Row>
