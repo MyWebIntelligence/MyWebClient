@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "cd client && yarn install",
-    "client": "cd client && yarn start",
+    "client": "cd client && NODE_OPTIONS=--openssl-legacy-provider yarn start",
     "server": "nodemon --exec babel-node server/src/start.js",
     "standalone": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\""
   },
@@ -13,10 +13,10 @@
     "body-parser": "^1.19.0",
     "concurrently": "^5.0.2",
     "express": "^4.17.1",
-    "node-sass": "^7.0.0",
+    "sass": "^1.70.0",
     "nodemon": "^2.0.2",
     "request": "2.88",
-    "sqlite3": "^4.1.1"
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",

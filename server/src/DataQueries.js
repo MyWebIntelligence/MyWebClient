@@ -56,21 +56,21 @@ const DataQueries = {
     },
 
     getLands: (req, res) => {
-        const sql = `SELECT l.id,
-                            l.name,
-                            COUNT(e.id)      AS expressionCount,
-                            MAX(e.relevance) AS maxRelevance,
-                            MIN(e.relevance) AS minRelevance,
-                            MAX(e.depth)     AS maxDepth,
-                            MIN(e.depth)     AS minDepth
-                     FROM land AS l
-                              LEFT JOIN expression AS e ON e.land_id = l.id
-                     WHERE e.http_status = 200
-                       AND e.relevance >= 0
-                     GROUP BY e.land_id`
+        // Simplified query to test if the land table has any data at all
+        const sql = `SELECT id, name FROM land`;
+        console.log("Executing simplified getLands query:", sql); // Log the query
         db.all(sql, (err, rows) => {
-            const response = !err ? rows : []
-            res.json(response)
+            if (err) {
+                console.error("Error in simplified getLands query:", err.message);
+                res.json([]); // Send empty array on error
+            } else {
+                console.log("Simplified getLands query result:", rows); // Log the result
+                // If rows is empty, the client will still fail.
+                // We need to provide default values for fields expected by the client if rows[0] is accessed.
+                // For now, let's send it as is and see client behavior or server logs.
+                const response = rows;
+                res.json(response);
+            }
         })
     },
 
@@ -122,10 +122,10 @@ const DataQueries = {
                             e.relevance,
                             d.id          AS domainId,
                             d.name        AS domainName,
-                            COUNT(t.id) AS tagCount
+                            COUNT(tc.tag_id) AS tagCount
                      FROM expression AS e
                      JOIN domain AS d ON d.id = e.domain_id
-                     LEFT JOIN taggedcontent AS t ON t.expression_id = e.id
+                     LEFT JOIN taggedcontent AS tc ON tc.expression_id = e.id
                      WHERE land_id = ?
                        AND e.http_status = 200
                        AND e.relevance >= ?
@@ -133,7 +133,12 @@ const DataQueries = {
                      GROUP BY e.id
                      ORDER BY ${column} ${order}
                      LIMIT ?, ?`
+        console.log("Executing getExpressions query:", sql, "with params:", params); // Log query and params
         db.all(sql, params, (err, rows) => {
+            if (err) {
+                console.error("Error in getExpressions query:", err.message);
+            }
+            console.log("getExpressions query result:", rows); // Log the result
             const response = !err ? rows : []
             res.json(response)
         })

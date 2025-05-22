@@ -2,7 +2,7 @@ import React, {useCallback, useContext, useEffect, useRef, useState} from "react
 import {Context} from '../../app/Context'
 import {Badge, Button, ButtonGroup, ButtonToolbar, Carousel, Col, Container, Form, Row} from "react-bootstrap"
 import TaggedContent from "../TagExplorer/TaggedContent"
-import marked from 'marked'
+import * as marked from 'marked'
 
 function Expression(props) {
     const context = useContext(Context)
@@ -178,7 +178,7 @@ function Expression(props) {
                                                 className="ExpressionExplorer-content-editable"
                                                 onChange={onTextChange}
                                                 onMouseUp={selectText}/>
-                                : <div dangerouslySetInnerHTML={{__html: marked(content)}}
+                                : <div dangerouslySetInnerHTML={{__html: marked.parse(content)}}
                                        className="ExpressionExplorer-content-readable form-control"/>
                             }
                         </div>

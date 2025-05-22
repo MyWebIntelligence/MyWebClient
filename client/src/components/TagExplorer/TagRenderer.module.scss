@@ -1,3 +1,5 @@
+@use "sass:math";
+
 $color-light: #ccc;
 $color-primary: #007bff;
 $row-padding: 3px;
@@ -156,16 +158,16 @@ $row-padding: 3px;
     animation: pointFade $spin-animation-time infinite ease-in-out both;
   }
 
-  @for $i from 1 through (($point-count + 1) / 2) {
+  @for $i from 1 through math.floor(math.div($point-count + 1, 2)) {
     &:nth-of-type(#{$i}) {
       transform: rotate(360deg / $point-count * ($i - 1));
     }
 
-    &:nth-of-type(#{$i + $point-count / 2}) {
+    &:nth-of-type(#{$i + math.floor(math.div($point-count, 2))}) {
       transform: rotate(180deg + 360deg / $point-count * ($i - 1));
     }
 
-    &:nth-of-type(#{$i}), &:nth-of-type(#{$i + $point-count / 2}) {
+    &:nth-of-type(#{$i}), &:nth-of-type(#{$i + math.floor(math.div($point-count, 2))}) {
       &:before {
         animation-delay: - $spin-animation-time + ($spin-animation-time / $point-count * 2 * ($i - 1));
       }

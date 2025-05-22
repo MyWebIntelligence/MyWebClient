@@ -6,14 +6,14 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 5001
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 app.get('/api/connect', (req, res) => {
-    console.log(`Connecting to ${req.query.db}`)
-    DataQueries.connect(req, res)
+    console.log(`Connecting to ${req.query.db}`) // Restored original log
+    DataQueries.connect(req, res) // Restored original call
 })
 
 app.get('/api/lands', (req, res) => {
