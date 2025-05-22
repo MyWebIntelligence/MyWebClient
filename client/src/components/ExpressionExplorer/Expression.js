@@ -3,6 +3,7 @@ import {Context} from '../../app/Context'
 import {Badge, Button, ButtonGroup, ButtonToolbar, Carousel, Col, Container, Form, Row} from "react-bootstrap"
 import TaggedContent from "../TagExplorer/TaggedContent"
 import * as marked from 'marked'
+import './MarkdownEditor.css' // Import the new CSS
 
 function Expression(props) {
     const context = useContext(Context)
@@ -81,10 +82,42 @@ function Expression(props) {
     }
 
     const selectText = event => {
-        const selected = textRef.current.value.substring(event.currentTarget.selectionStart, event.currentTarget.selectionEnd)
-        setTextSelection(selected)
-        setSelectionStart(event.currentTarget.selectionStart)
-        setSelectionEnd(event.currentTarget.selectionEnd)
+        let selectedText = ''
+        let start = 0
+        let end = 0
+
+        if (editMode && textRef.current && typeof textRef.current.value === 'string') { // Textarea in edit mode
+            selectedText = textRef.current.value.substring(event.currentTarget.selectionStart, event.currentTarget.selectionEnd)
+            start = event.currentTarget.selectionStart
+            end = event.currentTarget.selectionEnd
+        } else if (!editMode && window.getSelection) { // DIV in non-edit mode (formatted view)
+            const selection = window.getSelection()
+            selectedText = selection.toString()
+            if (selectedText.length > 0) {
+                // Try to find the selectedText within the original markdown `content`
+                const originalContent = content // `content` state holds the markdown
+                const foundIndex = originalContent.indexOf(selectedText)
+                if (foundIndex !== -1) {
+                    start = foundIndex
+                    end = foundIndex + selectedText.length
+                } else {
+                    // Fallback or error handling if selected text (from HTML) isn't found in markdown
+                    // This can happen due to markdown parsing differences.
+                    // For now, we'll clear the selection if not found, to prevent incorrect tagging.
+                    selectedText = '' 
+                    start = 0
+                    end = 0
+                    console.warn("Selected HTML text not found in original markdown content. Tagging might be inaccurate.")
+                }
+            } else {
+                 start = 0
+                 end = 0
+            }
+        }
+
+        setTextSelection(selectedText)
+        setSelectionStart(start)
+        setSelectionEnd(end)
     }
 
     const deleteExpression = _ => {
@@ -179,30 +212,11 @@ function Expression(props) {
                                                 onChange={onTextChange}
                                                 onMouseUp={selectText}/>
                                 : <div dangerouslySetInnerHTML={{__html: marked.parse(content)}}
-                                       className="ExpressionExplorer-content-readable form-control"/>
+                                       className="markdown-editor-content"
+                                       onMouseUp={selectText} // Add text selection handler
+                                       ref={textRef} // Add ref for selection
+                                />
                             }
-                        </div>
-                        <div className="my-3">
-                            <ButtonToolbar>
-                                <ButtonGroup className="mr-2">
-                                    <Button onClick={_ => setEditMode(!editMode)} variant={editMode ? 'success' : 'primary'}>{editMode ? 'E' : <u>E</u>}dit</Button>
-                                </ButtonGroup>
-                                <ButtonGroup className="mr-2">
-                                    <Button onClick={getReadable}
-                                            disabled={!editMode}><u>R</u>eadabilize</Button>
-                                </ButtonGroup>
-                                <ButtonGroup className="mr-2">
-                                    <Button onClick={saveReadable}
-                                            disabled={!(editMode && contentChanged)}><u>S</u>ave</Button>
-                                    <Button onClick={reloadExpression}
-                                            disabled={!(editMode && contentChanged)}>Reload</Button>
-                                </ButtonGroup>
-                                <ButtonGroup>
-                                    <Button variant="outline-danger"
-                                            onClick={_ => deleteExpression(context.currentExpression.id)}
-                                            disabled={!editMode}><u>D</u>elete</Button>
-                                </ButtonGroup>
-                            </ButtonToolbar>
                         </div>
                     </Form.Group>
                 </Col>
@@ -260,9 +274,32 @@ function Expression(props) {
                         </Form>
                     </div>}
 
-                    {!editMode && <p>Start tagging content in <Button onClick={_ => setEditMode(!editMode)} size="sm">Edit mode</Button></p>}
+                    {/* {!editMode && <p>Start tagging content in <Button onClick={_ => setEditMode(!editMode)} size="sm">Edit mode</Button></p>} */}
 
                     <TaggedContent tags={context.taggedContent}/>
+
+                    <div className="my-3">
+                        <ButtonToolbar>
+                            <ButtonGroup className="mr-2">
+                                <Button onClick={_ => setEditMode(!editMode)} variant={editMode ? 'success' : 'primary'}>{editMode ? 'E' : <u>E</u>}dit</Button>
+                            </ButtonGroup>
+                            <ButtonGroup className="mr-2">
+                                <Button onClick={getReadable}
+                                        disabled={!editMode}><u>R</u>eadabilize</Button>
+                            </ButtonGroup>
+                            <ButtonGroup className="mr-2">
+                                <Button onClick={saveReadable}
+                                        disabled={!(editMode && contentChanged)}><u>S</u>ave</Button>
+                                <Button onClick={reloadExpression}
+                                        disabled={!(editMode && contentChanged)}>Reload</Button>
+                            </ButtonGroup>
+                            <ButtonGroup>
+                                <Button variant="outline-danger"
+                                        onClick={_ => deleteExpression(context.currentExpression.id)}
+                                        disabled={!editMode}><u>D</u>elete</Button>
+                            </ButtonGroup>
+                        </ButtonToolbar>
+                    </div>
                 </Col>
             </Row>
         </Container>
