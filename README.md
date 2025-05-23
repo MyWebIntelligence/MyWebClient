@@ -99,19 +99,27 @@ Une fois que tout est installé (avec l'option 2) :
     Cela va démarrer à la fois le serveur API et le client ReactJS.
 3.  Ouvrez votre navigateur web et allez à l'adresse `http://localhost:3000`.
 
-## Authentification : Votre compte Administrateur
+## Authentification : Votre Compte Administrateur Initial
 
-Quand vous lancez MyWebClient pour la toute première fois (que ce soit avec Docker ou depuis les sources), un compte administrateur est créé automatiquement pour vous.
+Lors du tout premier lancement de MyWebClient (que ce soit avec Docker ou depuis les sources), un compte administrateur est automatiquement créé pour vous permettre de vous connecter. Voici comment cela fonctionne :
 
-*   **Identifiant par défaut :** `admin`
-*   **Mot de passe :**
-    *   Il est généré **aléatoirement** (c'est une suite de caractères un peu compliquée).
-    *   Vous le trouverez affiché dans la **console** (le terminal où vous avez lancé la commande `docker run` ou `yarn standalone`).
-    *   Il est aussi sauvegardé dans un fichier nommé `admin_password.txt` qui se trouve à la racine du dossier `MyWebClient`.
+*   **Identifiant :** L'identifiant de ce premier compte administrateur est toujours `admin`. Vous n'avez pas besoin de le choisir, il est défini par défaut. Il n'y a pas d'adresse e-mail associée à ce compte administrateur initial.
 
-**Comment choisir votre propre mot de passe administrateur ? (Optionnel, lors de la première installation)**
+*   **Mot de passe :** Vous avez deux scénarios pour le mot de passe :
+    1.  **Mot de passe généré automatiquement (comportement par défaut) :**
+        Si vous ne spécifiez rien de particulier, l'application va :
+        *   Créer un mot de passe **aléatoire et sécurisé** pour le compte `admin`.
+        *   Afficher ce mot de passe dans la **console** (le terminal où vous avez lancé la commande `docker run` ou `yarn standalone`). **Notez-le bien !**
+        *   Sauvegarder également ce mot de passe dans un fichier nommé `admin_password.txt` à la racine du dossier `MyWebClient`.
+        L'installation se poursuivra normalement avec ce mot de passe généré.
 
-Si vous ne voulez pas du mot de passe aléatoire généré par défaut, vous avez la possibilité de définir votre propre mot de passe administrateur **uniquement lorsque vous installez et lancez l'application pour la toute première fois**. Voici comment faire :
+    2.  **Choisir votre propre mot de passe (Optionnel, lors de la première installation uniquement) :**
+        Si vous préférez définir vous-même le mot de passe du compte `admin` **dès la création**, vous pouvez le faire en utilisant la variable d'environnement `ADMIN_PASSWORD` *avant* de lancer l'application pour la première fois. L'application utilisera alors le mot de passe que vous avez fourni.
+        **Attention :** Cette option n'est valable que pour la création initiale du compte. Si un compte `admin` existe déjà, cette variable sera ignorée.
+
+**En résumé :** L'application s'assure toujours qu'un compte `admin` existe avec un mot de passe. Si vous ne fournissez pas de mot de passe via `ADMIN_PASSWORD` lors du premier lancement, un mot de passe sécurisé sera automatiquement généré pour vous. L'installation ne sera pas bloquée.
+
+Voici comment spécifier `ADMIN_PASSWORD` si vous choisissez cette option :
 
 *   **Avec Docker :**
     Ajoutez `-e ADMIN_PASSWORD=VotreSuperMotDePasse` à la commande `docker run`.
