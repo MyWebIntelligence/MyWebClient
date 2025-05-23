@@ -1,3 +1,10 @@
+// Fichier: client/src/components/ExpressionExplorer/Expression.js
+// Description: Composant React pour afficher et interagir avec une "expression" individuelle.
+// Une expression semble être l'unité de contenu principale, avec un titre, une description,
+// une URL, un contenu "lisible" (markdown), des médias associés (images), et des tags.
+// Ce composant gère l'affichage, l'édition du contenu, la navigation (précédent/suivant),
+// la suppression, et le processus de tagging de segments de texte.
+
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react"
 import {Context} from '../../app/Context'
 import {Badge, Button, ButtonGroup, ButtonToolbar, Carousel, Col, Form, Row} from "react-bootstrap"
@@ -5,6 +12,14 @@ import TaggedContent from "../TagExplorer/TaggedContent"
 import * as marked from 'marked'
 import './MarkdownEditor.css' // Import the new CSS
 
+/**
+ * Composant Expression.
+ * Affiche les détails d'une expression sélectionnée, permet son édition,
+ * la navigation, la suppression et le tagging de son contenu.
+ * Utilise le Contexte (ConfigContext) pour accéder aux données de l'expression
+ * et pour déclencher des actions (sauvegarde, suppression, navigation, etc.).
+ * @param {object} props - Les propriétés du composant (ex: style).
+ */
 function Expression(props) {
     const context = useContext(Context)
     const textRef = useRef()
@@ -24,6 +39,70 @@ function Expression(props) {
         setSelectionEnd(null)
     }, [context])
 
+    /**
+     * Demande à l'utilisateur s'il souhaite sauvegarder les modifications avant de quitter la vue de l'expression.
+     * Appelle `saveReadable` si l'utilisateur confirme.
+     */
+    const saveReadable = useCallback(() => { // Enveloppé dans useCallback
+        if (textRef.current) { // Vérifier si textRef.current existe
+            context.saveReadable(context.currentExpression.id, textRef.current.value)
+            setContentChanged(false)
+        }
+    }, [context]) // Ajout de context comme dépendance
+
+    /**
+     * Demande à l'utilisateur s'il souhaite sauvegarder les modifications avant de quitter la vue de l'expression.
+     * Appelle `saveReadable` si l'utilisateur confirme.
+     */
+    const saveBeforeQuit = useCallback(() => { // Enveloppé dans useCallback
+        if (contentChanged && window.confirm("Would you want to save your changes before quit?")) {
+            saveReadable()
+        }
+    }, [contentChanged, saveReadable]) // Ajout de contentChanged et saveReadable comme dépendances
+
+    /**
+     * Gère la suppression de l'expression courante.
+     * Demande confirmation à l'utilisateur. Si confirmé, navigue vers l'expression suivante,
+     * appelle la fonction de suppression du contexte, et met à jour la liste des expressions du "land".
+     */
+    const deleteExpression = useCallback(() => { // Enveloppé dans useCallback
+        if (window.confirm("Are you sure to delete expression?")) {
+            const expressionId = context.currentExpression.id
+            const landId = context.currentExpression.landId
+            context.getNextExpression(expressionId, landId)
+            context.deleteExpression(expressionId)
+            context.getLand(context.currentLand.id)
+            context.getExpressions(context.currentLand.id)
+        }
+    }, [context]) // Ajout de context comme dépendance
+
+    /**
+     * Récupère la version "lisible" (markdown) de l'expression depuis le contexte.
+     * Met à jour l'état local `content` et `contentChanged` si le contenu a changé.
+     */
+    const getReadable = useCallback(() => { // Enveloppé dans useCallback
+        const currentContent = context.currentExpression.readable
+        const newContent = context.getReadable(context.currentExpression.id) // Renommé pour éviter la confusion avec l'état 'content'
+        const hasChanged = currentContent !== newContent
+        setContentChanged(hasChanged)
+
+        if (newContent && hasChanged) {
+            setContent(newContent)
+        }
+    }, [context]) // Ajout de context comme dépendance
+
+
+    /**
+     * Gère les raccourcis clavier pour la vue Expression.
+     * ESC: Ferme l'expression (après confirmation de sauvegarde si modifié).
+     * Flèche Gauche: Expression précédente (après confirmation).
+     * Flèche Droite: Expression suivante (après confirmation).
+     * E: Bascule le mode édition du contenu lisible.
+     * D: Supprime l'expression (après confirmation).
+     * R: "Readabilize" le contenu (probablement une conversion ou nettoyage).
+     * S: Sauvegarde le contenu lisible si modifié.
+     * @param {KeyboardEvent} event - L'événement clavier.
+     */
     const keyboardControl = useCallback(event => {
         if (context.notFocused()) {
             switch (event.keyCode) {
@@ -58,7 +137,7 @@ function Expression(props) {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [context.currentExpression, contentChanged])
+    }, [context, editMode, contentChanged, saveBeforeQuit, deleteExpression, getReadable, saveReadable])
 
     useEffect(() => {
         document.addEventListener("keydown", keyboardControl, false)
@@ -67,12 +146,11 @@ function Expression(props) {
         }
     }, [keyboardControl])
 
-    const saveBeforeQuit = _ => {
-        if (contentChanged && window.confirm("Would you want to save your changes before quit?")) {
-            saveReadable()
-        }
-    }
-
+    /**
+     * Gère les modifications du contenu textuel de l'expression en mode édition.
+     * Met à jour l'état local `content` et `contentChanged`.
+     * @param {React.ChangeEvent<HTMLTextAreaElement>} event - L'événement de changement du textarea.
+     */
     const onTextChange = event => {
         const content = event.target.value
         setContent(content)
@@ -84,7 +162,13 @@ function Expression(props) {
     // Ajout : état pour la position du bloc de tagging
     const [taggingPosition, setTaggingPosition] = useState(null);
 
-    // Version onMouseUp uniquement (retour à l'ancien comportement)
+    /**
+     * Gère la sélection de texte par l'utilisateur, que ce soit en mode édition (textarea)
+     * ou en mode lecture (div avec contenu HTML).
+     * Met à jour l'état avec le texte sélectionné, ses positions de début/fin,
+     * et la position pour afficher le pop-up de tagging.
+     * @param {MouseEvent | React.SyntheticEvent} event - L'événement de relâchement du clic souris ou de sélection.
+     */
     const selectText = event => {
         let selectedText = '';
         let start = 0;
@@ -140,38 +224,21 @@ function Expression(props) {
         setTaggingPosition(pos);
     }
 
-    const deleteExpression = _ => {
-        if (window.confirm("Are you sure to delete expression?")) {
-            const expressionId = context.currentExpression.id
-            const landId = context.currentExpression.landId
-            context.getNextExpression(expressionId, landId)
-            context.deleteExpression(expressionId)
-            context.getLand(context.currentLand.id)
-            context.getExpressions(context.currentLand.id)
-        }
-    }
-
-    const getReadable = _ => {
-        const currentContent = context.currentExpression.readable
-        const content = context.getReadable(context.currentExpression.id)
-        const hasChanged = currentContent !== content
-        setContentChanged(hasChanged)
-
-        if (content && hasChanged) {
-            setContent(content)
-        }
-    }
-
-    const saveReadable = _ => {
-        context.saveReadable(context.currentExpression.id, textRef.current.value)
-        setContentChanged(false)
-    }
-
+    /**
+     * Recharge les données de l'expression courante depuis le contexte.
+     * Réinitialise l'indicateur `contentChanged`.
+     */
     const reloadExpression = _ => {
         context.getExpression(context.currentExpression.id)
         setContentChanged(false)
     }
 
+    /**
+     * Gère la suppression d'un média (image) associé à l'expression.
+     * Appelle la fonction de suppression du contexte et recharge l'expression.
+     * @param {MouseEvent} event - L'événement clic.
+     * @param {string} image - L'URL de l'image à supprimer.
+     */
     const deleteMedia = (event, image) => {
         context.deleteMedia(image)
         reloadExpression()

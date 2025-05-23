@@ -1,3 +1,10 @@
+// Fichier: client/src/components/ExpressionExplorer/ExpressionExplorer.js
+// Description: Composant React principal pour l'exploration des "expressions".
+// Affiche une liste paginée et triable d'expressions pour le "land" actuellement sélectionné.
+// Permet la sélection multiple, la suppression d'expressions, et la navigation entre les pages.
+// Gère également l'affichage conditionnel des composants Expression (détail), Domain (détail),
+// et TaggedContent (contenu taggué pour le land).
+
 import React, {useCallback, useContext, useEffect, useState} from 'react'
 import {Context} from '../../app/Context'
 import {Row, Col, Badge, Button, Table} from 'react-bootstrap'
@@ -6,22 +13,63 @@ import Expression from './Expression'
 import Domain from '../Domain/Domain'
 import TaggedContent from '../TagExplorer/TaggedContent';
 
+/**
+ * Composant ExpressionExplorer.
+ * Affiche la liste des expressions pour le "land" courant, avec pagination, tri,
+ * et fonctionnalités de sélection/suppression.
+ * Gère également l'affichage des vues détaillées (Expression, Domain, TaggedContent).
+ */
 function ExpressionExplorer() {
     const context = useContext(Context)
-    const [selected, setSelected] = useState(false)
+    const [selected, setSelected] = useState(false) // État pour la case à cocher "tout sélectionner"
 
-    const setPrevPage = _ => {
+    /**
+     * Supprime toutes les expressions actuellement sélectionnées dans la liste.
+     * Demande confirmation à l'utilisateur. Si confirmé, récupère les IDs des expressions
+     * sélectionnées et appelle la fonction de suppression du contexte.
+     * Met ensuite à jour les données du "land" et la liste des expressions.
+     */
+    const dropSelected = useCallback(_ => {
+        if (selected && window.confirm("Are you sure to drop selected expressions?")) {
+            const cbs = document.querySelectorAll(".expressionSelect:checked")
+            let ids = []
+            cbs.forEach(cb => {
+                ids.push(parseInt(cb.dataset.expressionid))
+            })
+            context.deleteExpression(ids)
+            context.getLand(context.currentLand.id)
+            context.getExpressions(context.currentLand.id)
+        }
+    }, [context, selected]) // Ajout de context et selected comme dépendances
+
+    /**
+     * Navigue vers la page précédente de la liste des expressions.
+     * Vérifie si ce n'est pas déjà la première page.
+     */
+    const setPrevPage = useCallback(_ => {
         if (context.currentPage > 1) {
             context.setCurrentPage(context.currentPage - 1)
         }
-    }
+    }, [context])
 
-    const setNextPage = _ => {
+    /**
+     * Navigue vers la page suivante de la liste des expressions.
+     * Vérifie si ce n'est pas déjà la dernière page.
+     */
+    const setNextPage = useCallback(_ => {
         if (context.currentPage < context.pageCount) {
             context.setCurrentPage(context.currentPage + 1)
         }
-    }
+    }, [context])
 
+    /**
+     * Gère les raccourcis clavier pour la liste des expressions.
+     * Flèche Gauche: Page précédente.
+     * Flèche Droite: Page suivante.
+     * D: Supprime les expressions sélectionnées (après confirmation).
+     * S'applique uniquement si aucun champ n'a le focus et si aucune vue de détail (expression/domaine) n'est ouverte.
+     * @param {KeyboardEvent} event - L'événement clavier.
+     */
     const keyboardControl = useCallback(event => {
         const unloadedExpression = context.currentExpression === null
         const unloadedDomain = context.currentDomain === null
@@ -38,7 +86,7 @@ function ExpressionExplorer() {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [context, selected])
+    }, [context, setPrevPage, setNextPage, dropSelected]) // Suppression de 'selected' des dépendances car dropSelected est maintenant mémorisé avec selected
 
     useEffect(() => {
         document.addEventListener("keydown", keyboardControl, false)
@@ -47,6 +95,11 @@ function ExpressionExplorer() {
         }
     }, [keyboardControl])
 
+    /**
+     * Gère le clic sur la case à cocher "tout sélectionner/désélectionner".
+     * Met à jour l'état `selected` et coche/décoche toutes les cases individuelles des expressions.
+     * @param {React.ChangeEvent<HTMLInputElement>} event - L'événement de changement de la case à cocher.
+     */
     const groupSelect = event => {
         setSelected(event.target.checked)
         const cbs = document.querySelectorAll(".expressionSelect")
@@ -55,6 +108,10 @@ function ExpressionExplorer() {
         })
     }
 
+    /**
+     * Vérifie si au moins une expression est sélectionnée dans la liste.
+     * Met à jour l'état `selected` (pour la case "tout sélectionner") en conséquence.
+     */
     const checkSelected = _ => {
         let isChecked = false
         const cbs = document.querySelectorAll(".expressionSelect")
@@ -67,19 +124,15 @@ function ExpressionExplorer() {
         setSelected(isChecked)
     }
 
-    const dropSelected = _ => {
-        if (selected && window.confirm("Are you sure to drop selected expressions?")) {
-            const cbs = document.querySelectorAll(".expressionSelect:checked")
-            let ids = []
-            cbs.forEach(cb => {
-                ids.push(parseInt(cb.dataset.expressionid))
-            })
-            context.deleteExpression(ids)
-            context.getLand(context.currentLand.id)
-            context.getExpressions(context.currentLand.id)
-        }
-    }
-
+    /**
+     * Supprime toutes les expressions actuellement sélectionnées dans la liste.
+     * Demande confirmation à l'utilisateur. Si confirmé, récupère les IDs des expressions
+     * Génère l'indicateur de tri (flèche haut/bas) pour les en-têtes de colonnes du tableau.
+     * Affiche l'indicateur et met en évidence le label si la colonne est la colonne de tri active.
+     * @param {string} column - Le nom de la colonne (identifiant technique).
+     * @param {string} label - Le label lisible de la colonne.
+     * @returns {JSX.Element} Le label avec ou sans indicateur de tri.
+     */
     const sortHint = (column, label) => {
         const sortHint = context.sortOrder === 1 ? <i className="fas fa-caret-up"/> :
             <i className="fas fa-caret-down"/>

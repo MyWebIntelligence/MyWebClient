@@ -1,3 +1,9 @@
+// Fichier: client/src/components/Domain/Domain.js
+// Description: Composant React pour afficher les détails d'un "domaine" spécifique.
+// Un domaine semble être une entité contenant des expressions et des métadonnées.
+// Ce composant utilise le Contexte (ConfigContext) pour accéder aux données du domaine courant
+// et pour permettre de fermer la vue du domaine.
+
 import React, {useCallback, useContext, useEffect} from "react";
 import {Context} from '../../app/Context';
 import './Domain.css';
@@ -5,9 +11,21 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 
+/**
+ * Composant Domain.
+ * Affiche les informations détaillées du domaine actuellement sélectionné dans le contexte.
+ * Permet de fermer la vue du domaine via un bouton ou la touche Échap.
+ * @param {object} props - Les propriétés du composant (ex: style).
+ */
 function Domain(props) {
     const context = useContext(Context);
 
+    /**
+     * Gère les raccourcis clavier pour ce composant.
+     * Spécifiquement, la touche Échap (keyCode 27) ferme la vue du domaine
+     * si aucun champ de saisie n'a le focus et si aucune expression n'est chargée.
+     * @param {KeyboardEvent} event - L'événement clavier.
+     */
     const keyboardControl = useCallback(event => {
         const notFocused = document.querySelectorAll('input:focus, textarea:focus').length === 0
         const unloadedExpression = context.currentExpression === null

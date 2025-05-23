@@ -1,8 +1,21 @@
+// Fichier: server/src/DataQueries.js
+// Description: Ce module gère toutes les requêtes vers la base de données principale de l'application (hors admin).
+// Il est responsable de la connexion à la base de données SQLite spécifiée par l'utilisateur
+// et de l'exécution des requêtes SQL pour récupérer et manipuler les données relatives aux "lands",
+// "expressions", "domaines", "tags", contenu taggué, et médias.
+// Les fonctions de cet objet sont généralement exposées comme des points de terminaison API.
+
 import sqlite from "sqlite3"
-import Mercury from "@postlight/mercury-parser"
+import Mercury from "@postlight/mercury-parser" // Utilisé pour extraire le contenu "lisible" d'URLs
 
-let db
+let db // Instance unique de la base de données principale
 
+/**
+ * Génère une chaîne de placeholders SQL (?) pour les requêtes préparées,
+ * en fonction du nombre de paramètres.
+ * @param {Array|any} params - Un tableau de paramètres ou une seule valeur.
+ * @returns {string} Une chaîne de placeholders (ex: "?,?,?" ou "?").
+ */
 const placeholders = params => {
     if (Array.isArray(params)) {
         return params.map(_ => '?').join(',')
@@ -10,6 +23,13 @@ const placeholders = params => {
     return '?'
 }
 
+/**
+ * Récupère l'ID de l'expression précédente ou suivante dans un "land" donné,
+ * en fonction des critères de tri et de filtrage actuels.
+ * @param {number} offset - -1 pour l'expression précédente, 1 pour la suivante.
+ * @param {object} req - L'objet requête Express, contenant les paramètres dans req.query (landId, minRelevance, maxDepth, id, sortColumn, sortOrder).
+ * @param {object} res - L'objet réponse Express.
+ */
 const getSiblingExpression = (offset, req, res) => {
     const params = [
         req.query.landId,
@@ -42,44 +62,69 @@ const getSiblingExpression = (offset, req, res) => {
     })
 }
 
+const dbCheck = (res, callback) => {
+    if (!db) {
+        console.error("Database not connected. Call /api/connect first.");
+        if (res && typeof res.status === 'function') {
+            res.status(503).json({ error: "Database not connected. Please connect first via /api/connect." });
+        }
+        return false;
+    }
+    return callback();
+};
+
 const DataQueries = {
+    /**
+     * API Route: /api/connect
+     * Établit une connexion à la base de données SQLite spécifiée par le chemin dans `req.query.db`.
+     * Active les clés étrangères.
+     * @param {object} req - L'objet requête Express. `req.query.db` doit contenir le chemin du fichier DB.
+     * @param {object} res - L'objet réponse Express. Retourne `true` si la connexion est réussie, `false` sinon.
+     */
     connect: (req, res) => {
-        const normPath = (filename) => filename.replace(/\\/g, '/')
+        const normPath = (filename) => filename.replace(/\\/g, '/') // Normalise les chemins pour Windows
         db = new sqlite.Database(normPath(req.query.db), sqlite.OPEN_READWRITE, (err) => {
             if (err) console.error(err.message)
             else {
-                db.run('PRAGMA foreign_keys = ON')
+                db.run('PRAGMA foreign_keys = ON') // Active le support des clés étrangères
                 console.log(`Connected to ${req.query.db}`)
             }
-            res.json(!err)
+            res.json(!err) // Retourne true si pas d'erreur, false sinon
         })
     },
 
-    getLands: (req, res) => {
-        // Simplified query to test if the land table has any data at all
+    /**
+     * API Route: /api/lands
+     * Récupère la liste de tous les "lands" (id et nom).
+     * @param {object} req - L'objet requête Express.
+     * @param {object} res - L'objet réponse Express. Retourne un tableau d'objets land [{id, name}].
+     */
+    getLands: (req, res) => dbCheck(res, () => {
         const sql = `SELECT id, name FROM land`;
-        console.log("Executing simplified getLands query:", sql); // Log the query
         db.all(sql, (err, rows) => {
             if (err) {
-                console.error("Error in simplified getLands query:", err.message);
-                res.json([]); // Send empty array on error
+                console.error("Error in getLands query:", err.message);
+                res.json([]);
             } else {
-                console.log("Simplified getLands query result:", rows); // Log the result
-                // If rows is empty, the client will still fail.
-                // We need to provide default values for fields expected by the client if rows[0] is accessed.
-                // For now, let's send it as is and see client behavior or server logs.
-                const response = rows;
-                res.json(response);
+                res.json(rows);
             }
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    getLand: (req, res) => {
+    /**
+     * API Route: /api/land
+     * Récupère les détails d'un "land" spécifique, y compris le nombre d'expressions
+     * correspondant aux filtres de pertinence et de profondeur.
+     * @param {object} req - L'objet requête Express. `req.query` doit contenir `id` (du land),
+     *                       et optionnellement `minRelevance` et `maxDepth`.
+     * @param {object} res - L'objet réponse Express. Retourne un objet land détaillé ou `false` en cas d'erreur.
+     */
+    getLand: (req, res) => dbCheck(res, () => {
         const params = [
-            req.query.id,
+            req.query.id, // pour le COUNT(*)
             req.query.minRelevance ?? 0,
             req.query.maxDepth ?? 3,
-            req.query.id,
+            req.query.id, // pour le WHERE l.id = ?
         ]
 
         const sql = `SELECT l.id,
@@ -101,9 +146,17 @@ const DataQueries = {
             const response = !err ? row : false
             res.json(response)
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    getExpressions: (req, res) => {
+    /**
+     * API Route: /api/expressions
+     * Récupère une liste paginée et triée d'expressions pour un "land" donné,
+     * en appliquant les filtres de pertinence et de profondeur.
+     * @param {object} req - L'objet requête Express. `req.query` doit contenir `landId`,
+     *                       et optionnellement `minRelevance`, `maxDepth`, `offset`, `limit`, `sortColumn`, `sortOrder`.
+     * @param {object} res - L'objet réponse Express. Retourne un tableau d'objets expression.
+     */
+    getExpressions: (req, res) => dbCheck(res, () => {
         const params = [
             req.query.landId,
             req.query.minRelevance ?? 0,
@@ -142,9 +195,15 @@ const DataQueries = {
             const response = !err ? rows : []
             res.json(response)
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    getDomain: (req, res) => {
+    /**
+     * API Route: /api/domain
+     * Récupère les détails d'un domaine spécifique, y compris le nombre total d'expressions associées.
+     * @param {object} req - L'objet requête Express. `req.query.id` doit contenir l'ID du domaine.
+     * @param {object} res - L'objet réponse Express. Retourne un objet domaine détaillé ou `null` en cas d'erreur.
+     */
+    getDomain: (req, res) => dbCheck(res, () => {
         const sql = `SELECT d.id,
                             d.name,
                             d.title,
@@ -159,9 +218,15 @@ const DataQueries = {
             const response = !err ? row : null
             res.json(response)
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    getExpression: (req, res) => {
+    /**
+     * API Route: /api/expression
+     * Récupère les détails complets d'une expression spécifique, y compris son domaine associé et ses images.
+     * @param {object} req - L'objet requête Express. `req.query.id` doit contenir l'ID de l'expression.
+     * @param {object} res - L'objet réponse Express. Retourne un objet expression détaillé ou `null` en cas d'erreur.
+     */
+    getExpression: (req, res) => dbCheck(res, () => {
         const sql = `SELECT e.id,
                             e.land_id           AS landId,
                             e.url,
@@ -183,17 +248,38 @@ const DataQueries = {
             const response = !err ? row : null
             res.json(response)
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    getPrevExpression: (req, res) => {
+    /**
+     * API Route: /api/prev
+     * Récupère l'ID de l'expression précédente par rapport à une expression donnée,
+     * en utilisant les filtres et tris courants. Fait appel à `getSiblingExpression`.
+     * @param {object} req - L'objet requête Express. Voir `getSiblingExpression` pour les `req.query` attendus.
+     * @param {object} res - L'objet réponse Express.
+     */
+    getPrevExpression: (req, res) => dbCheck(res, () => {
         getSiblingExpression(-1, req, res)
-    },
+    }), // Virgule déjà présente, mais vérification
 
-    getNextExpression: (req, res) => {
+    /**
+     * API Route: /api/next
+     * Récupère l'ID de l'expression suivante par rapport à une expression donnée,
+     * en utilisant les filtres et tris courants. Fait appel à `getSiblingExpression`.
+     * @param {object} req - L'objet requête Express. Voir `getSiblingExpression` pour les `req.query` attendus.
+     * @param {object} res - L'objet réponse Express.
+     */
+    getNextExpression: (req, res) => dbCheck(res, () => {
         getSiblingExpression(1, req, res)
-    },
+    }), // Virgule déjà présente, mais vérification
 
-    getReadable: (req, res) => {
+    /**
+     * API Route: /api/readable
+     * Récupère l'URL d'une expression, puis utilise Mercury Parser pour extraire
+     * son contenu principal au format Markdown.
+     * @param {object} req - L'objet requête Express. `req.query.id` doit contenir l'ID de l'expression.
+     * @param {object} res - L'objet réponse Express. Retourne le contenu Markdown ou `null`.
+     */
+    getReadable: (req, res) => dbCheck(res, () => {
         const sql = `SELECT e.id,
                             e.url
                      FROM expression AS e
@@ -219,9 +305,16 @@ const DataQueries = {
                 res.json(response)
             }
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    saveReadable: (req, res) => {
+    /**
+     * API Route: /api/readable (POST)
+     * Sauvegarde le contenu "lisible" (Markdown) d'une expression.
+     * Met à jour le champ `readable` et `readable_at` de l'expression.
+     * @param {object} req - L'objet requête Express. `req.body` doit contenir `id` (de l'expression) et `content` (Markdown).
+     * @param {object} res - L'objet réponse Express. Retourne `true` en cas de succès, `false` sinon.
+     */
+    saveReadable: (req, res) => dbCheck(res, () => {
         try {
             db.run(
                 'UPDATE expression SET readable = ?, readable_at = ? WHERE id = ?',
@@ -240,9 +333,15 @@ const DataQueries = {
             console.log(`Error : undefined content for expression #${req.body.id}`)
             res.json(false)
         }
-    },
+    }), // Ajout de la virgule manquante
 
-    deleteExpression: (req, res) => {
+    /**
+     * API Route: /api/deleteExpression
+     * Supprime une ou plusieurs expressions, ainsi que les médias et liens associés.
+     * @param {object} req - L'objet requête Express. `req.query.id` peut être un ID unique ou un tableau d'IDs.
+     * @param {object} res - L'objet réponse Express. Retourne `true`.
+     */
+    deleteExpression: (req, res) => dbCheck(res, () => {
         db.serialize(() => {
             db.run(`DELETE
                     FROM expression
@@ -256,10 +355,17 @@ const DataQueries = {
                          OR target_id IN (${placeholders(req.query.id)})`, [req.query.id, req.query.id])
         })
         return res.json(true)
-    },
+    }), // Virgule déjà présente, mais vérification
 
-    getTags: (req, res) => {
-        const buildTagTree = rows => {
+    /**
+     * API Route: /api/tags
+     * Récupère tous les tags pour un "land" donné et les structure en arbre hiérarchique.
+     * Calcule également le chemin complet (`path`) pour chaque tag.
+     * @param {object} req - L'objet requête Express. `req.query.landId` doit contenir l'ID du "land".
+     * @param {object} res - L'objet réponse Express. Retourne un tableau de tags structuré en arbre.
+     */
+    getTags: (req, res) => dbCheck(res, () => {
+        const buildTagTree = rows => { // Fonction utilitaire pour construire l'arbre
             const tree = []
             const lookup = {}
             rows.forEach((r) => {
@@ -299,16 +405,16 @@ const DataQueries = {
             const response = !err ? buildTagTree(rows) : []
             res.json(response)
         })
-    },
+    }), // Ajout de la virgule manquante
 
     /**
      * Selects all tags from land to build server-side index
      * Then walks through all GUI-side nodes to insert or update nodes and build new index
      * Then both indexes are compared so deletions can be committed
-     * @param req
-     * @param res
+     * @param {object} req - L'objet requête Express. `req.body` doit contenir `landId` et `tags` (la structure d'arbre des tags).
+     * @param {object} res - L'objet réponse Express. Retourne `true`.
      */
-    setTags: (req, res) => {
+    setTags: (req, res) => dbCheck(res, () => {
         const insert = db.prepare("INSERT INTO tag (land_id, parent_id, name, sorting, color) VALUES (?, ?, ?, ?, ?)")
         const update = db.prepare("UPDATE tag SET parent_id = ?, name = ?, sorting = ?, color = ? WHERE id = ?")
         const remove = db.prepare("DELETE FROM tag WHERE id = ?")
@@ -348,9 +454,15 @@ const DataQueries = {
 
             res.json(true)
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    updateTag: (req, res) => {
+    /**
+     * API Route: /api/updateTag (POST)
+     * Met à jour le nom et la couleur d'un tag spécifique.
+     * @param {object} req - L'objet requête Express. `req.body` doit contenir `id` (du tag), `name`, et `color`.
+     * @param {object} res - L'objet réponse Express. Retourne `true` ou une erreur.
+     */
+    updateTag: (req, res) => dbCheck(res, () => {
         const sql = `UPDATE tag
                      SET name  = ?,
                          color = ?
@@ -359,9 +471,16 @@ const DataQueries = {
             const response = !err ? true : err
             res.json(response)
         })
-    },
+    }), // Virgule déjà présente, mais vérification
 
-    getTaggedContent: (req, res) => {
+    /**
+     * API Route: /api/taggedContent
+     * Récupère le contenu taggué, soit pour une expression spécifique, soit pour un "land" entier.
+     * Peut également filtrer par un tag spécifique.
+     * @param {object} req - L'objet requête Express. `req.query` peut contenir `expressionId` ou `landId`, et optionnellement `tagId`.
+     * @param {object} res - L'objet réponse Express. Retourne un tableau de contenus taggués.
+     */
+    getTaggedContent: (req, res) => dbCheck(res, () => {
         let sql,
             params = []
 
@@ -389,26 +508,44 @@ const DataQueries = {
             const response = !err ? rows : []
             res.json(response)
         })
-    },
+    }), // Ajout de la virgule manquante
 
-    deleteTaggedContent: (req, res) => {
+    /**
+     * API Route: /api/deleteTaggedContent
+     * Supprime une instance spécifique de contenu taggué.
+     * @param {object} req - L'objet requête Express. `req.query.id` doit contenir l'ID du contenu taggué.
+     * @param {object} res - L'objet réponse Express. Retourne `true` si succès.
+     */
+    deleteTaggedContent: (req, res) => dbCheck(res, () => {
         const sql = `DELETE
                      FROM taggedContent
                      WHERE id = ?`
         db.run(sql, [req.query.id], err => {
             res.json(!err)
         })
-    },
+    }), // Virgule déjà présente, mais vérification
 
-    setTaggedContent: (req, res) => {
+    /**
+     * API Route: /api/tagContent (POST) - (Nommé setTaggedContent dans le code original)
+     * Crée une nouvelle instance de contenu taggué (associe un tag à un segment de texte d'une expression).
+     * @param {object} req - L'objet requête Express. `req.body` doit contenir `tagId`, `expressionId`, `text`, `start`, `end`.
+     * @param {object} res - L'objet réponse Express. Retourne `true` ou une erreur.
+     */
+    setTaggedContent: (req, res) => dbCheck(res, () => {
         const sql = 'INSERT INTO taggedContent (tag_id, expression_id, `text`,  from_char, to_char) VALUES (?, ?, ?, ?, ?)'
         db.run(sql, [req.body.tagId, req.body.expressionId, req.body.text, req.body.start, req.body.end], (err) => {
             const response = !err ? true : err
             res.json(response)
         })
-    },
+    }), // Virgule déjà présente, mais vérification
 
-    updateTagContent: (req, res) => {
+    /**
+     * API Route: /api/updateTagContent (POST)
+     * Met à jour le tag et/ou le texte d'une instance de contenu taggué existante.
+     * @param {object} req - L'objet requête Express. `req.body` doit contenir `contentId`, `tagId`, `text`.
+     * @param {object} res - L'objet réponse Express. Retourne `true` ou une erreur.
+     */
+    updateTagContent: (req, res) => dbCheck(res, () => {
         const sql = `UPDATE taggedContent
                      SET tag_id = ?,
                          text= ?
@@ -417,14 +554,20 @@ const DataQueries = {
             const response = !err ? true : err
             res.json(response)
         })
-    },
+    }), // Virgule déjà présente, mais vérification
 
-    deleteMedia: (req, res) => {
+    /**
+     * API Route: /api/deleteMedia (POST)
+     * Supprime un média (par URL) associé à une expression spécifique.
+     * @param {object} req - L'objet requête Express. `req.body` doit contenir `url` (du média) et `expressionId`.
+     * @param {object} res - L'objet réponse Express. Retourne `true` ou une erreur.
+     */
+    deleteMedia: (req, res) => dbCheck(res, () => {
         db.run('DELETE FROM media WHERE url = ? AND expression_id = ?', [req.body.url, req.body.expressionId], (err) => {
             const response = !err ? true : err
             res.json(response)
         })
-    }
+    })
 }
 
 export default DataQueries

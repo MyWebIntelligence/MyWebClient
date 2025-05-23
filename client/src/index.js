@@ -1,3 +1,8 @@
+// Fichier: client/src/index.js
+// Description: Point d'entrée principal de l'application React.
+// Ce fichier est responsable du rendu du composant racine <App /> dans le DOM
+// et de l'initialisation (ou non) du service worker.
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './components/App/App';

@@ -1,3 +1,10 @@
+// Fichier: client/src/components/TagExplorer/TagExplorer.js
+// Description: Composant React pour afficher et gérer une hiérarchie de tags.
+// Utilise la bibliothèque `react-sortable-tree` pour permettre le tri, l'ajout,
+// la suppression et la modification des tags (nom, couleur).
+// Interagit avec le Contexte (ConfigContext) pour persister les changements de tags
+// et pour récupérer les tags associés au "land" courant.
+
 import React, {useContext, useEffect, useState} from 'react'
 import {Context} from "../../app/Context"
 import SortableTree, {addNodeUnderParent, removeNodeAtPath, changeNodeAtPath} from 'react-sortable-tree'
@@ -6,17 +13,28 @@ import './TagExplorer.css'
 import {Button, Modal, OverlayTrigger, Tooltip} from "react-bootstrap"
 import {SketchPicker} from 'react-color'
 
+/**
+ * Composant TagExplorer.
+ * Affiche une arborescence de tags éditable (ajout, suppression, renommage, changement de couleur).
+ * Permet également de visualiser tout le contenu taggué pour le "land" courant.
+ * Utilise `react-sortable-tree` pour l'affichage et la manipulation de l'arbre.
+ */
 function TagExplorer() {
 
     const context = useContext(Context)
-    const defaultColor = '#007bff'
-    const [treeData, setTreeData] = useState(context.tags)
-    const getNodeKey = ({treeIndex}) => treeIndex
-    const newTag = {name: 'New tag', color: defaultColor, children: []}
-    const [currentTag, setCurrentTag] = useState(null);
-    const [showModal, setShowModal] = useState(false)
+    const defaultColor = '#007bff' // Couleur par défaut pour les nouveaux tags
+    const [treeData, setTreeData] = useState(context.tags) // État local pour les données de l'arbre
+    const getNodeKey = ({treeIndex}) => treeIndex // Fonction pour obtenir la clé d'un nœud
+    const newTag = {name: 'New tag', color: defaultColor, children: []} // Modèle pour un nouveau tag
+    const [currentTag, setCurrentTag] = useState(null); // Tag actuellement sélectionné pour le changement de couleur
+    const [showModal, setShowModal] = useState(false) // État pour afficher/cacher la modale de sélection de couleur
+
+    /**
+     * Gère la fermeture de la modale de sélection de couleur.
+     */
     const handleClose = _ => setShowModal(false)
 
+    // Met à jour l'état local `treeData` lorsque les tags du contexte changent.
     useEffect(() => {
         setTreeData(context.tags)
     }, [context.tags])
