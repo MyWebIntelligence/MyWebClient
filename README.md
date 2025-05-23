@@ -110,7 +110,7 @@ Lors du tout premier lancement de MyWebClient (que ce soit avec Docker ou depuis
         Si vous ne spécifiez rien de particulier, l'application va :
         *   Créer un mot de passe **aléatoire et sécurisé** pour le compte `admin`.
         *   Afficher ce mot de passe dans la **console** (le terminal où vous avez lancé la commande `docker run` ou `yarn standalone`). **Notez-le bien !**
-        *   Sauvegarder également ce mot de passe dans un fichier nommé `admin_password.txt` à la racine du dossier `MyWebClient` (ou dans `/app/admin_password.txt` si vous utilisez Docker). Ce fichier est créé pour votre commodité et n'est pas accessible via le web.
+        *   L'application (via son script d'initialisation) sauvegardera également ce mot de passe dans un fichier nommé `admin_password.txt`. Ce fichier sera situé à la racine du dossier `MyWebClient` (ou dans `/app/admin_password.txt` si vous utilisez Docker). Il est créé pour votre commodité et n'est pas accessible directement via une requête web.
         L'installation se poursuivra normalement avec ce mot de passe généré.
 
     2.  **Choisir votre propre mot de passe (Optionnel, lors de la première installation uniquement) :**
