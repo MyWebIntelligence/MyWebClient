@@ -113,6 +113,30 @@ Lors du tout premier lancement de MyWebClient (que ce soit avec Docker ou depuis
         *   L'application (via son script d'initialisation) sauvegardera également ce mot de passe dans un fichier nommé `admin_password.txt`. Ce fichier sera situé à la racine du dossier `MyWebClient` (ou dans `/app/admin_password.txt` si vous utilisez Docker). Il est créé pour votre commodité et n'est pas accessible directement via une requête web.
         L'installation se poursuivra normalement avec ce mot de passe généré.
 
+### Comment retrouver le mot de passe administrateur ?
+
+Si vous avez oublié le mot de passe généré lors du premier lancement, ou si vous ne l'avez pas noté, vous pouvez le retrouver :
+
+*   **En mode standalone (avec `yarn standalone`) :**
+    Le mot de passe est stocké dans le fichier `admin_password.txt` à la racine de votre projet `MyWebClient`. Vous pouvez l'ouvrir avec un éditeur de texte ou l'afficher dans votre terminal :
+    ```bash
+    cat admin_password.txt
+    ```
+    Le contenu sera sous la forme `admin:VOTRE_MOT_DE_PASSE`.
+
+*   **Avec Docker :**
+    Le fichier `admin_password.txt` se trouve à l'intérieur du conteneur Docker, au chemin `/app/admin_password.txt`. Pour lire son contenu, utilisez la commande `docker exec` (en remplaçant `mwiclient` par le nom ou l'ID de votre conteneur si vous l'avez changé) :
+    ```bash
+    docker exec mwiclient cat /app/admin_password.txt
+    ```
+    Cela affichera `admin:VOTRE_MOT_DE_PASSE` dans votre terminal.
+
+    Vous pouvez également consulter les logs de démarrage du conteneur, car le mot de passe y est affiché lors de sa création :
+    ```bash
+    docker logs mwiclient
+    ```
+    Recherchez une ligne similaire à `>>>>>>>>>> MOT DE PASSE ADMIN GÉNÉRÉ (initAdmin.js): VOTRE_MOT_DE_PASSE <<<<<<<<<<`.
+
     2.  **Choisir votre propre mot de passe (Optionnel, lors de la première installation uniquement) :**
         Si vous préférez définir vous-même le mot de passe du compte `admin` **dès la création**, vous pouvez le faire en utilisant la variable d'environnement `ADMIN_PASSWORD` *avant* de lancer l'application pour la première fois. L'application utilisera alors le mot de passe que vous avez fourni.
         **Attention :** Cette option n'est valable que pour la création initiale du compte. Si un compte `admin` existe déjà, cette variable sera ignorée.
