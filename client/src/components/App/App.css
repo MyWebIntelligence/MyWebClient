@@ -17,7 +17,7 @@ html {
 .App {
     display: grid;
     height: 100vh;
-    grid-template-columns: 400px auto;
+    grid-template-columns: 25% 75%;
     grid-template-rows: 60px auto;
     overflow-x: hidden;
     overflow-y: auto;

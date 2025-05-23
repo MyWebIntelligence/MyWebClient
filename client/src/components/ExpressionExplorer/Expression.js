@@ -1,6 +1,6 @@
 import React, {useCallback, useContext, useEffect, useRef, useState} from "react"
 import {Context} from '../../app/Context'
-import {Badge, Button, ButtonGroup, ButtonToolbar, Carousel, Col, Container, Form, Row} from "react-bootstrap"
+import {Badge, Button, ButtonGroup, ButtonToolbar, Carousel, Col, Form, Row} from "react-bootstrap"
 import TaggedContent from "../TagExplorer/TaggedContent"
 import * as marked from 'marked'
 import './MarkdownEditor.css' // Import the new CSS

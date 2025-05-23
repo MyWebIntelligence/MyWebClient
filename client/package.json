@@ -20,6 +20,7 @@
     "react-color": "2.17.3",
     "react-dnd": "7.3.0",
     "react-dom": "^16.12.0",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.0",
     "react-sortable-tree": "^2.7.1",
     "typescript": "^3.9.3"

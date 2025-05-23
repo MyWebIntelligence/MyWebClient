@@ -8,6 +8,22 @@ This app actually runs two services concurrently, the ReactJS client itself (GUI
 
 # Installation from Dockerfile
 
+## Authentification administrateur
+
+Lors du premier lancement (yarn standalone ou Docker), un compte administrateur est créé automatiquement si aucun n'existe :
+- Identifiant : **admin**
+- Mot de passe : généré aléatoirement et affiché dans la console, et écrit dans le fichier `admin_password.txt` à la racine du projet.
+- Vous pouvez forcer le mot de passe via la variable d'environnement `ADMIN_PASSWORD` ou en passant un argument à `node server/src/initAdmin.js`.
+
+**Exemple :**
+```bash
+ADMIN_PASSWORD=MonSuperMotDePasse yarn standalone
+```
+ou
+```bash
+docker run -e ADMIN_PASSWORD=MonSuperMotDePasse ...
+```
+
 ## Requirements
 
 * [Docker](https://www.docker.com/products/docker-desktop)
@@ -91,4 +107,3 @@ Inside project root directory, launch server and client app concurrently
 ```
 MyWebClient> yarn standalone
 ```
-

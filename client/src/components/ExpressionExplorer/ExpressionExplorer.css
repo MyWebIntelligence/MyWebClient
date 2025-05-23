@@ -89,7 +89,7 @@
     right: 0;
     top: 0;
     z-index: 2;
-    overflow-y: auto; /* Allow vertical scrolling for this section */
+    /* overflow-y: auto;  Retiré pour permettre le sticky */
 }
 
 .ExpressionExplorer-content,
@@ -131,4 +131,14 @@
     margin: 0 auto;
     width: 100%;
     min-height: 100px;
+}
+
+.sticky-content-tagging {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    width: 100%;
+    /* Optionally add a box-shadow for better visibility */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
