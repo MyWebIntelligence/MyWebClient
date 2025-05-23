@@ -109,9 +109,9 @@ Quand vous lancez MyWebClient pour la toute première fois (que ce soit avec Doc
     *   Vous le trouverez affiché dans la **console** (le terminal où vous avez lancé la commande `docker run` ou `yarn standalone`).
     *   Il est aussi sauvegardé dans un fichier nommé `admin_password.txt` qui se trouve à la racine du dossier `MyWebClient`.
 
-**Comment choisir votre propre mot de passe administrateur ?**
+**Comment choisir votre propre mot de passe administrateur ? (Optionnel, lors de la première installation)**
 
-Si vous ne voulez pas du mot de passe aléatoire, vous pouvez le définir vous-même AVANT de lancer l'application pour la première fois.
+Si vous ne voulez pas du mot de passe aléatoire généré par défaut, vous avez la possibilité de définir votre propre mot de passe administrateur **uniquement lorsque vous installez et lancez l'application pour la toute première fois**. Voici comment faire :
 
 *   **Avec Docker :**
     Ajoutez `-e ADMIN_PASSWORD=VotreSuperMotDePasse` à la commande `docker run`.
