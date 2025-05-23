@@ -296,7 +296,7 @@ function Expression(props) {
                                             className="ExpressionExplorer-content-editable"
                                             onChange={onTextChange}
                                             onMouseUp={selectText}/>
-                            : <div dangerouslySetInnerHTML={{__html: marked.parse(content)}}
+                            : <div dangerouslySetInnerHTML={{__html: marked.parse(content || '')}}
                                 className="markdown-editor-content"
                                 onMouseUp={selectText}
                                 ref={textRef}
