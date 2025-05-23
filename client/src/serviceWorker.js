@@ -1,3 +1,8 @@
+// Fichier: client/src/serviceWorker.js
+// Description: Ce fichier gère l'enregistrement et la désactivation du service worker de l'application.
+// Le service worker permet à l'application de fonctionner hors ligne et d'améliorer les performances
+// en mettant en cache les ressources. Il est principalement utilisé en environnement de production.
+
 // This optional code is used to register a service worker.
 // register() is not called by default.
 
@@ -20,6 +25,12 @@ const isLocalhost = Boolean(
     )
 );
 
+/**
+ * Enregistre le service worker.
+ * Cette fonction est appelée pour initialiser le service worker en environnement de production.
+ * Elle vérifie si l'URL publique est sur la même origine que la page actuelle avant de procéder.
+ * @param {object} config - Objet de configuration optionnel contenant des callbacks pour onUpdate et onSuccess.
+ */
 export function register(config) {
   if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
@@ -54,6 +65,13 @@ export function register(config) {
   }
 }
 
+/**
+ * Enregistre un service worker valide après vérification.
+ * Gère les événements du cycle de vie du service worker (installation, mise à jour).
+ * Exécute les callbacks onUpdate ou onSuccess fournis dans la configuration.
+ * @param {string} swUrl - L'URL du script du service worker.
+ * @param {object} config - Objet de configuration optionnel.
+ */
 function registerValidSW(swUrl, config) {
   navigator.serviceWorker
     .register(swUrl)
@@ -98,6 +116,14 @@ function registerValidSW(swUrl, config) {
     });
 }
 
+/**
+ * Vérifie si le service worker est valide et accessible.
+ * Si le service worker n'est pas trouvé (erreur 404) ou si le type de contenu n'est pas JavaScript,
+ * il tente de désenregistrer le service worker existant et de recharger la page.
+ * Sinon, il procède à l'enregistrement du service worker valide.
+ * @param {string} swUrl - L'URL du script du service worker.
+ * @param {object} config - Objet de configuration optionnel.
+ */
 function checkValidServiceWorker(swUrl, config) {
   // Check if the service worker can be found. If it can't reload the page.
   fetch(swUrl, {
@@ -128,6 +154,10 @@ function checkValidServiceWorker(swUrl, config) {
     });
 }
 
+/**
+ * Désenregistre le service worker.
+ * Si un service worker est actif, cette fonction le désenregistre.
+ */
 export function unregister() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.ready.then(registration => {

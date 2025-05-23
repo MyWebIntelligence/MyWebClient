@@ -1,25 +1,31 @@
+// Fichier: server/src/authRoutes.js
+// Description: Ce module définit les routes Express dédiées à l'authentification des utilisateurs.
+// Il gère la connexion, la déconnexion, la vérification de l'état d'authentification,
+// la demande de réinitialisation de mot de passe et la réinitialisation effective du mot de passe.
+// Utilise express-session pour la gestion des sessions, bcrypt pour le hachage des mots de passe,
+// et Resend pour l'envoi d'e-mails. Interagit avec AdminDB.js pour les opérations sur la base de données.
+
 import express from "express"
 import bcrypt from "bcrypt"
-import session from "express-session"
+import jwt from "jsonwebtoken"
 import AdminDB from "./AdminDB.js"
 
-const router = express.Router()
-const adminDB = AdminDB.connectAdminDB()
+const router = express.Router() // Crée un nouveau routeur Express
+const adminDB = AdminDB.connectAdminDB() // Initialise la connexion à la base de données admin
 
-// Middleware session (à intégrer dans app.js/server.js principal)
-export const sessionMiddleware = session({
-    secret: process.env.SESSION_SECRET || "supersecret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        httpOnly: true,
-        secure: false, // à mettre true en prod HTTPS
-        sameSite: "lax",
-        maxAge: 1000 * 60 * 60 * 24 * 30 // 30 jours
-    }
-})
+const JWT_SECRET = process.env.JWT_SECRET || "jwt_super_secret_key"
+const JWT_EXPIRES_IN = "7d" // Durée de validité du token
 
-// Login utilisateur
+// Suppression de la gestion de session : tout est géré par JWT désormais
+
+/**
+ * Route POST /api/auth/login
+ * Gère la tentative de connexion d'un utilisateur.
+ * Vérifie l'identifiant et le mot de passe, gère les tentatives échouées et le blocage de compte.
+ * En cas de succès, initialise la session utilisateur et retourne les informations de l'utilisateur.
+ * @param {object} req.body - Doit contenir `identifier` (username ou email) et `password`.
+ * @returns {object} JSON avec `success: true` et `user` en cas de succès, ou `error` en cas d'échec.
+ */
 router.post("/login", (req, res) => {
     const { identifier, password } = req.body
     AdminDB.findUser(identifier, async (err, user) => {
@@ -47,29 +53,52 @@ router.post("/login", (req, res) => {
             })
             return
         }
-        // Réinitialiser compteur d'échecs, mettre à jour session
+        // Réinitialiser compteur d'échecs, générer le JWT, mettre à jour la session
         AdminDB.resetFailedAttempts(user.id, () => {})
-        req.session.userId = user.id
+        const payload = { id: user.id, username: user.username, role: user.role }
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
         AdminDB.updateLastSession(user.id, () => {})
         AdminDB.addAccessLog({ user_id: user.id, ip: req.ip, status: "success", reason: "login" }, () => {})
-        res.json({ success: true, user: { id: user.id, username: user.username, role: user.role, last_session: user.last_session } })
+        res.json({
+            success: true,
+            token,
+            user: { id: user.id, username: user.username, role: user.role, last_session: user.last_session }
+        })
     })
 })
 
-// Déconnexion
+/**
+ * Route POST /api/auth/logout
+ * Gère la déconnexion de l'utilisateur en détruisant sa session.
+ * @returns {object} JSON avec `success: true`.
+ */
 router.post("/logout", (req, res) => {
     req.session.destroy(() => {
         res.json({ success: true })
     })
 })
 
-// Infos utilisateur courant
+/**
+ * Route GET /api/auth/me
+ * Récupère les informations de l'utilisateur actuellement authentifié via le JWT.
+ * @returns {object} JSON avec les informations de l'utilisateur (id, username, role, last_session)
+ * ou une erreur 401 si non authentifié, ou 404 si l'utilisateur n'est plus trouvé.
+ */
 router.get("/me", (req, res) => {
-    if (!req.session.userId) return res.status(401).json({ error: "Non authentifié" })
-    AdminDB.findUser(req.session.userId, (err, user) => {
-        if (err || !user) return res.status(404).json({ error: "Utilisateur non trouvé" })
-        res.json({ id: user.id, username: user.username, role: user.role, last_session: user.last_session })
-    })
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Non authentifié" })
+    }
+    const token = authHeader.split(" ")[1]
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET)
+        AdminDB.findUserById(decoded.id, (err, user) => {
+            if (err || !user) return res.status(404).json({ error: "Utilisateur non trouvé" })
+            res.json({ id: user.id, username: user.username, role: user.role, last_session: user.last_session })
+        })
+    } catch (e) {
+        return res.status(401).json({ error: "Token invalide ou expiré" })
+    }
 })
 
 import crypto from "crypto"
@@ -79,9 +108,16 @@ import { Resend } from "resend"
 // La clé API doit être définie dans la variable d'environnement RESEND_API_KEY.
 // Exemple: export RESEND_API_KEY="votre_clé_api"
 // Ou via la commande de démarrage: RESEND_API_KEY="votre_clé_api" yarn server
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY) // Instance du client Resend
 
-// Route de demande de récupération de mot de passe
+/**
+ * Route POST /api/auth/recover
+ * Gère la demande de réinitialisation de mot de passe.
+ * Génère un token de réinitialisation unique et l'associe à l'email de l'utilisateur dans la base de données.
+ * Envoie un e-mail à l'utilisateur contenant un lien avec ce token pour réinitialiser son mot de passe.
+ * @param {object} req.body - Doit contenir `email`.
+ * @returns {object} JSON avec `success: true` ou `error`.
+ */
 router.post("/recover", async (req, res) => {
     const { email } = req.body
     // Générer un token sécurisé
@@ -106,7 +142,14 @@ router.post("/recover", async (req, res) => {
     })
 })
 
-// Route de soumission du nouveau mot de passe
+/**
+ * Route POST /api/auth/reset
+ * Gère la soumission d'un nouveau mot de passe après qu'un utilisateur a cliqué sur le lien de réinitialisation.
+ * Vérifie la validité du token, la complexité du nouveau mot de passe, puis met à jour le mot de passe
+ * de l'utilisateur dans la base de données et invalide le token.
+ * @param {object} req.body - Doit contenir `token` (le token de réinitialisation) et `newPassword`.
+ * @returns {object} JSON avec `success: true` ou `error`.
+ */
 router.post("/reset", async (req, res) => {
     const { token, newPassword } = req.body
     if (!token || !newPassword) return res.status(400).json({ error: "Token ou mot de passe manquant" })

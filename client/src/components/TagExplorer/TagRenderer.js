@@ -1,3 +1,10 @@
+// Fichier: client/src/components/TagExplorer/TagRenderer.js
+// Description: Composant React personnalisé pour le rendu de chaque nœud (tag)
+// dans l'arborescence de tags gérée par `react-sortable-tree` (utilisé dans TagExplorer.js).
+// Ce composant est responsable de l'affichage du nom du tag, des boutons d'action
+// (ajouter un enfant, supprimer, changer la couleur), et des éléments visuels
+// liés au drag-and-drop et à l'expansion/réduction des nœuds.
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import {getIEVersion} from './utils/browser-utils';
@@ -8,7 +15,7 @@ let styles = baseStyles;
 
 // Add extra classes in browsers that don't support flex
 if (getIEVersion < 10) {
-    styles = {
+    styles = { // Applique des styles spécifiques pour les anciennes versions d'Internet Explorer
         ...baseStyles,
         row: `${styles.row} ${styles.row_NoFlex}`,
         rowContents: `${styles.rowContents} ${styles.rowContents_NoFlex}`,
@@ -32,14 +39,16 @@ const TagRenderer = ({
                          isSearchMatch,
                          isSearchFocus,
                          title,
-                         buttons,
-                         className,
-                         style = {},
-                         startDrag: _startDrag,
-                         endDrag: _endDrag,
-                         ...otherProps
+        buttons, // Tableau de boutons d'action à afficher pour le nœud
+        className, // Classe CSS additionnelle pour le conteneur du nœud
+        style = {}, // Styles en ligne additionnels
+        startDrag: _startDrag, // (Non utilisé directement, mais partie de l'API react-sortable-tree)
+        endDrag: _endDrag, // (Non utilisé directement)
+        ...otherProps // Autres props passées par react-sortable-tree
                      }) => {
-    let handle;
+    let handle; // Élément JSX pour la poignée de drag-and-drop ou l'indicateur de chargement
+
+    // Affiche un indicateur de chargement si les enfants sont en cours de chargement (fonction callback)
     if (typeof node.children === 'function' && node.expanded) {
         // Show a loading symbol on the handle when the children are expanded
         //  and yet still defined by a function (a callback to fetch the children)

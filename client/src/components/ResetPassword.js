@@ -1,6 +1,19 @@
+// Fichier: client/src/components/ResetPassword.js
+// Description: Composant React pour la fonctionnalité de réinitialisation de mot de passe.
+// Permet à l'utilisateur de définir un nouveau mot de passe après avoir validé un token reçu par e-mail.
+// Gère l'extraction du token de l'URL, la validation du nouveau mot de passe, l'appel à l'API
+// et l'affichage des messages de succès ou d'erreur.
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useHistory } from 'react-router-dom'; // Remplacer useNavigate par useHistory
 
+/**
+ * Composant ResetPassword.
+ * Affiche un formulaire où l'utilisateur peut saisir et confirmer son nouveau mot de passe.
+ * Le token de réinitialisation est récupéré depuis les paramètres de l'URL.
+ * Gère la soumission du formulaire, la validation des mots de passe, l'appel à l'API
+ * et la redirection vers la page de connexion en cas de succès.
+ */
 function ResetPassword() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -13,6 +26,7 @@ function ResetPassword() {
     const location = useLocation();
     const history = useHistory(); // Initialiser useHistory
 
+    // Effet pour extraire le token de réinitialisation des paramètres de l'URL au chargement du composant.
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const tokenFromQuery = queryParams.get('token');
@@ -23,6 +37,13 @@ function ResetPassword() {
         }
     }, [location]);
 
+    /**
+     * Gère la soumission du formulaire de réinitialisation de mot de passe.
+     * Vérifie que les mots de passe correspondent et respectent les critères de complexité.
+     * Envoie le token et le nouveau mot de passe à l'API /api/auth/reset.
+     * Affiche les messages de succès/erreur et redirige vers la connexion si succès.
+     * @param {React.SyntheticEvent} e - L'événement de soumission du formulaire.
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
@@ -62,6 +83,9 @@ function ResetPassword() {
         setLoading(false);
     };
 
+    /**
+     * Bascule la visibilité du mot de passe dans les champs de saisie.
+     */
     const toggleShowPassword = () => {
         setShowPassword(!showPassword);
     };

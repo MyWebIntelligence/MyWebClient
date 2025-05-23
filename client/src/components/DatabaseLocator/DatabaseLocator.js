@@ -1,9 +1,22 @@
+// Fichier: client/src/components/DatabaseLocator/DatabaseLocator.js
+// Description: Composant React permettant à l'utilisateur de spécifier le chemin
+// vers le fichier de base de données SQLite et d'afficher l'état de la connexion.
+// Utilise le Contexte (ConfigContext) pour mettre à jour le chemin de la base de données
+// et pour refléter l'état de la connexion (connecté, en cours, erreur).
+
 import React, {useContext, useEffect} from 'react';
 import {Context} from '../../app/Context';
 import FormControl from 'react-bootstrap/FormControl';
 import InputGroup from 'react-bootstrap/InputGroup';
 
-
+/**
+ * Composant DatabaseLocator.
+ * Affiche un champ de saisie où l'utilisateur peut coller le chemin d'accès
+ * au fichier de la base de données.
+ * Au premier rendu, tente de se connecter à la base de données précédemment stockée
+ * dans localStorage.
+ * Affiche une icône indiquant l'état de la connexion (succès, échec, en cours).
+ */
 function DatabaseLocator() {
     const context = useContext(Context);
 

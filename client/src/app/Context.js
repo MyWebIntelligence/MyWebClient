@@ -1,3 +1,9 @@
+// Fichier: client/src/app/Context.js
+// Description: Ce fichier définit le contexte React principal de l'application (ConfigContext).
+// Il gère l'état global de l'application frontend, y compris la connexion à la base de données,
+// les données des "lands", expressions, domaines, tags, et les interactions utilisateur associées.
+// Toutes les opérations de récupération et de modification de données transitent par ce contexte.
+
 import React, {Component} from 'react'
 import axios from 'axios'
 import qs from 'qs'
@@ -6,8 +12,15 @@ import {delay} from "./Util"
 export const DEFAULT_RELEVANCE = 0
 export const DEFAULT_DEPTH = 2
 
+// Crée un contexte React qui sera utilisé par les composants pour accéder à l'état et aux fonctions.
 export const Context = React.createContext()
 
+/**
+ * ConfigContext est un composant React de type Provider qui enveloppe l'application
+ * et fournit l'état global et les fonctions pour interagir avec cet état.
+ * Il gère la logique de récupération des données depuis l'API backend et met à jour l'état
+ * en conséquence, rendant ces données accessibles à tous les composants enfants.
+ */
 export class ConfigContext extends Component {
     constructor(props) {
         super(props)
@@ -44,8 +57,15 @@ export class ConfigContext extends Component {
         this.state = this.initialState
     }
 
+    // Retourne un timestamp basé sur window.performance.now().
     ts = _ => Math.round(window.performance.now())
 
+    /**
+     * Configure la base de données à utiliser.
+     * Stocke le chemin de la base de données dans localStorage et tente de se connecter via l'API.
+     * Met à jour l'état de connexion et charge les "lands" initiales si la connexion réussit.
+     * @param {string} dbPath - Le chemin vers le fichier de la base de données SQLite.
+     */
     setDb = dbPath => {
         let state = this.initialState
         state.connecting = true
@@ -86,6 +106,13 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Récupère les informations d'un "land" spécifique par son ID.
+     * Met à jour l'état avec les détails du "land" courant, y compris les comptes d'expressions
+     * et les plages de pertinence/profondeur.
+     * Si le "land" change, réinitialise les filtres et recharge les expressions et tags.
+     * @param {number} id - L'ID du "land" à charger.
+     */
     getLand = id => {
         if (id === null) {
             this.setState({
@@ -144,6 +171,12 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Récupère une page d'expressions pour un "land" donné, en fonction des filtres actuels
+     * (pertinence, profondeur, tri, pagination).
+     * Met à jour l'état avec la liste des expressions chargées.
+     * @param {number} landId - L'ID du "land" pour lequel charger les expressions.
+     */
     getExpressions = landId => {
         const params = {
             landId: landId,
@@ -163,6 +196,11 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Récupère les informations d'un domaine spécifique par son ID.
+     * Met à jour l'état avec les détails du domaine courant.
+     * @param {number} id - L'ID du domaine à charger.
+     */
     getDomain = id => {
         if (id === null) {
             this.setState({currentDomain: null})
@@ -174,6 +212,11 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Récupère les détails d'une expression spécifique par son ID.
+     * Met à jour l'état avec l'expression courante et charge le contenu taggé associé.
+     * @param {number} id - L'ID de l'expression à charger.
+     */
     getExpression = id => {
         if (id === null) {
             this.setState({
@@ -189,6 +232,11 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Supprime une expression par son ID.
+     * Met à jour l'état pour indiquer le chargement pendant la suppression.
+     * @param {number} id - L'ID de l'expression à supprimer.
+     */
     deleteExpression = id => {
         this.setState({isLoadingExpressions: true})
         const ids = {id: id}
@@ -197,6 +245,11 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Récupère l'expression précédente dans la liste triée et filtrée actuelle.
+     * @param {number} id - L'ID de l'expression actuelle.
+     * @param {number} landId - L'ID du "land" actuel.
+     */
     getPrevExpression = (id, landId) => {
         const params = {
             id: id,
@@ -214,6 +267,11 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Récupère l'expression suivante dans la liste triée et filtrée actuelle.
+     * @param {number} id - L'ID de l'expression actuelle.
+     * @param {number} landId - L'ID du "land" actuel.
+     */
     getNextExpression = (id, landId) => {
         const params = {
             id: id,
@@ -231,6 +289,11 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Met à jour la valeur du filtre de pertinence.
+     * Réinitialise la page courante à 1 et recharge le "land" avec le nouveau filtre.
+     * @param {number} value - La nouvelle valeur de pertinence.
+     */
     setCurrentRelevance = value => {
         this.setState({currentRelevance: value}, () => {
             this.setCurrentPage(1)
@@ -238,12 +301,22 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Met à jour la valeur du filtre de profondeur.
+     * Recharge le "land" avec le nouveau filtre.
+     * @param {number} value - La nouvelle valeur de profondeur.
+     */
     setCurrentDepth = value => {
         this.setState({currentDepth: value}, () => {
             this.getLand(this.state.currentLand.id)
         })
     }
 
+    /**
+     * Met à jour la page courante pour la pagination des expressions.
+     * Recharge les expressions pour la nouvelle page après un court délai.
+     * @param {number} value - Le nouveau numéro de page.
+     */
     setCurrentPage = value => {
         this.setState({
             isLoadingExpressions: true,
@@ -253,12 +326,22 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Met à jour le nombre de résultats par page.
+     * Recharge les expressions avec la nouvelle limite.
+     * @param {number} value - Le nouveau nombre de résultats par page.
+     */
     setResultsPerPage = value => {
         this.setState({resultsPerPage: value}, () => {
             this.getExpressions(this.state.currentLand.id)
         })
     }
 
+    /**
+     * Récupère la version "lisible" (markdown converti) d'une expression.
+     * Met à jour l'état de l'expression courante avec ce contenu.
+     * @param {number} expressionId - L'ID de l'expression.
+     */
     getReadable = expressionId => {
         axios.get(`/api/readable?id=${expressionId}`).then(res => {
             this.setState(state => {
@@ -273,6 +356,11 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Sauvegarde la version "lisible" (markdown) d'une expression.
+     * @param {number} expressionId - L'ID de l'expression.
+     * @param {string} content - Le contenu markdown à sauvegarder.
+     */
     saveReadable = (expressionId, content) => {
         axios.post(`/api/readable`, {
             id: expressionId,
@@ -280,6 +368,12 @@ export class ConfigContext extends Component {
         }).then(res => res.data)
     }
 
+    /**
+     * Définit la colonne de tri pour la liste des expressions.
+     * Si la colonne est la même que l'actuelle, inverse l'ordre de tri.
+     * Recharge les expressions avec les nouveaux paramètres de tri.
+     * @param {string} column - Le nom de la colonne sur laquelle trier.
+     */
     setSortColumn = column => {
         if (this.state.sortColumn === column) {
             this.setState(currentState => {
@@ -294,12 +388,22 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Définit l'ordre de tri (ascendant ou descendant).
+     * Recharge les expressions avec le nouvel ordre.
+     * @param {number} order - L'ordre de tri (1 pour ascendant, -1 pour descendant).
+     */
     setSortOrder = order => {
         this.setState({sortOrder: parseInt(order)}, () => {
             this.getExpressions(this.state.currentLand.id)
         })
     }
 
+    /**
+     * Récupère la liste des tags pour un "land" spécifique.
+     * Met à jour l'état avec les tags chargés.
+     * @param {number} landId - L'ID du "land".
+     */
     getTags = landId => {
         if (landId === null) {
             this.setState({tags: []})
@@ -311,6 +415,12 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Met à jour la structure des tags pour le "land" courant.
+     * Détecte si des changements ont eu lieu avant d'envoyer une requête à l'API.
+     * Si des changements sont détectés, sauvegarde les tags via l'API et recharge les tags et le contenu taggé.
+     * @param {Array} tags - La nouvelle structure hiérarchique des tags.
+     */
     setTags = tags => {
         const tagsHaveChanged = (a, b, d) => {
             if (a.length !== b.length) {
@@ -354,6 +464,11 @@ export class ConfigContext extends Component {
         this.setState({tags: tags})
     }
 
+    /**
+     * Met à jour les informations d'un tag spécifique (nom, couleur).
+     * Recharge la liste des tags après la mise à jour.
+     * @param {object} tag - L'objet tag contenant id, name, et color.
+     */
     updateTag = tag => {
         axios.post('/api/updateTag', {
             id: tag.id,
@@ -366,6 +481,11 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Récupère le contenu taggé pour des paramètres donnés (ex: par expressionId ou tagId).
+     * Met à jour l'état `taggedContent`.
+     * @param {object} params - Objet de paramètres pour la requête API (ex: {expressionId: 1}).
+     */
     getTaggedContent = params => {
         if (params === null) {
             this.setState({taggedContent: []})
@@ -378,6 +498,11 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Récupère tout le contenu taggé pour des paramètres donnés (ex: par landId).
+     * Utilisé pour des vues agrégées de contenu taggé. Met à jour l'état `allTaggedContent`.
+     * @param {object} params - Objet de paramètres pour la requête API (ex: {landId: 1}).
+     */
     getAllTaggedContent = params => {
         if (params === null) {
             this.setState({allTaggedContent: null})
@@ -390,6 +515,12 @@ export class ConfigContext extends Component {
         }
     }
 
+    /**
+     * Supprime une instance de contenu taggé.
+     * Peut recharger soit tout le contenu taggé du "land", soit seulement celui de l'expression courante.
+     * @param {number} taggedContentId - L'ID du contenu taggé à supprimer.
+     * @param {boolean} [reloadAll=false] - Si vrai, recharge tout le contenu taggé du "land".
+     */
     deleteTaggedContent = (taggedContentId, reloadAll = false) => {
         axios.get(`/api/deleteTaggedContent?id=${taggedContentId}`).then(_ => {
             if (reloadAll === true) {
@@ -400,6 +531,7 @@ export class ConfigContext extends Component {
         })
     }
 
+    // Aplatit la structure hiérarchique des tags en une liste simple, ajoutant une propriété de profondeur.
     flatTags = (tags, depth) => {
         let out = []
         tags.forEach(tag => {
@@ -410,6 +542,8 @@ export class ConfigContext extends Component {
         return out
     }
 
+    // Catégorise le contenu taggé fourni en fonction de la structure de tags actuelle.
+    // Retourne une liste de tags, chacun avec une propriété `contents` contenant les éléments taggés associés.
     categorizeTaggedContent = tags => {
         let data = []
         this.flatTags(this.state.tags).forEach(tag => {
@@ -426,6 +560,14 @@ export class ConfigContext extends Component {
         return data
     }
 
+    /**
+     * Crée un nouveau tag sur un segment de texte d'une expression.
+     * @param {number} tagId - L'ID du tag à appliquer.
+     * @param {number} expressionId - L'ID de l'expression contenant le texte.
+     * @param {string} text - Le segment de texte sélectionné.
+     * @param {number} start - L'index de début de la sélection.
+     * @param {number} end - L'index de fin de la sélection.
+     */
     tagContent = (tagId, expressionId, text, start, end) => {
         axios.post('/api/tagContent', {
             tagId: tagId,
@@ -441,6 +583,13 @@ export class ConfigContext extends Component {
         })
     }
 
+    /**
+     * Met à jour un tag existant sur un segment de texte.
+     * @param {number} contentId - L'ID du contenu taggé à mettre à jour.
+     * @param {number} tagId - Le nouvel ID de tag (si changé).
+     * @param {string} text - Le nouveau texte (si modifié).
+     * @param {boolean} [reloadAll=false] - Si vrai, recharge tout le contenu taggé du "land".
+     */
     updateTagContent = (contentId, tagId, text, reloadAll = false) => {
         axios.post('/api/updateTagContent', {
             contentId: contentId,
@@ -463,12 +612,18 @@ export class ConfigContext extends Component {
         })
     }
 
+    // Définit un filtre de tag courant pour afficher uniquement le contenu associé à ce tag.
     setTagFilter = tagId => {
         this.setState({currentTagFilter: tagId})
     }
 
+    // Vérifie si aucun champ input ou textarea n'a le focus.
     notFocused = _ => document.querySelectorAll('input:focus, textarea:focus').length === 0
 
+    /**
+     * Supprime un média (image) associé à l'expression courante.
+     * @param {string} image - L'URL du média à supprimer.
+     */
     deleteMedia = (image) => {
         axios.post('/api/deleteMedia', {
             expressionId: this.state.currentExpression.id,
