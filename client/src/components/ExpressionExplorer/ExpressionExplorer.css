@@ -96,12 +96,22 @@
 .ExpressionExplorer-content-readable,
 .ExpressionExplorer-content-editable {
     height: 50vh !important;
-    width: 100%;
+    width: 100%; /* Revient à la largeur complète de son parent */
+    /* overflow-y: scroll;  Déplacé ci-dessous pour s'appliquer uniquement aux bonnes classes */
 }
 
 .ExpressionExplorer-content-readable,
 .ExpressionExplorer-content-editable {
     overflow-y: scroll;
+}
+
+/* Cible le conteneur direct du contenu Markdown */
+.ExpressionExplorer-content .markdown-editor-content,
+.ExpressionExplorer-content-readable .markdown-editor-content {
+    width: 50vw; /* Ce conteneur prendra 50% de la largeur de la fenêtre */
+    margin-left: auto; /* Centre ce conteneur */
+    margin-right: auto; /* Centre ce conteneur */
+    /* Si ce conteneur doit aussi scroller indépendamment, ajoutez overflow-y: scroll; */
 }
 
 .ExpressionExplorer-gallery {
@@ -120,10 +130,14 @@
     z-index: 2;
 }
 
-.ExpressionExplorer-content-readable img {
-    display: block;
-    margin: 0 auto;
-    width: 80%;
+/* Style pour les images à l'intérieur du contenu markdown éditable/lisible */
+.ExpressionExplorer-content .markdown-editor-content img,
+.ExpressionExplorer-content-readable .markdown-editor-content img {
+    display: block; /* Pour permettre le centrage et la prise de largeur complète */
+    margin: 0 auto; /* Centre l'image horizontalement */
+    width: 100%;   /* L'image prendra 100% de la largeur de son conteneur (.markdown-editor-content) */
+    height: auto;  /* Maintient les proportions de l'image */
+    max-width: 100%; /* Assure que l'image ne dépasse pas son conteneur, même si sa largeur intrinsèque est plus grande */
 }
 
 .ExpressionExplorer .carousel-inner img {
