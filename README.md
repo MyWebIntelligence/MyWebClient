@@ -44,10 +44,11 @@ Docker, c'est un peu comme une boîte magique qui contient tout ce dont l'applic
 4.  **Lancez l'application (le "conteneur" Docker) :**
     Maintenant, on crée une instance de notre boîte magique et on la démarre.
     ```bash
-    docker run -p 80:3000 --name mwiclient -v /chemin/vers/vos/donnees/mywi:/data mwiclient:1.0
+    docker run -p 80:3000 -p 5001:5001 --name mwiclient -v /chemin/vers/vos/donnees/mywi:/data mwiclient:1.0
     ```
     Décortiquons cette commande :
     *   `-p 80:3000` : Rend l'application accessible sur le port 80 de votre ordinateur (redirigé depuis le port 3000 à l'intérieur de la boîte Docker).
+    *   `-p 5001:5001` : (Optionnel, utile pour debug ou accès direct à l'API backend) Expose aussi le port API backend.
     *   `--name mwiclient` : Donne un nom à notre boîte pour la retrouver facilement.
     *   `-v /chemin/vers/vos/donnees/mywi:/data` : C'est **TRÈS IMPORTANT**.
         *   Remplacez `/chemin/vers/vos/donnees/mywi` par le **chemin exact** sur VOTRE ordinateur où se trouve le dossier `Data` du projet MyWebIntelligencePython (celui qui contient le fichier `mwi.db`).
@@ -55,8 +56,29 @@ Docker, c'est un peu comme une boîte magique qui contient tout ce dont l'applic
         *   `/data` à la fin est le nom du dossier *à l'intérieur* de la boîte Docker. L'application MyWebClient cherchera la base de données dans `/data/mwi.db`.
     *   `mwiclient:1.0` : C'est le nom de l'image qu'on a construite.
 
+    **Variables d'environnement utiles :**
+    *   `ADMIN_PASSWORD` (optionnel) : Pour définir le mot de passe admin à la première installation.
+    *   `RESEND_API_KEY` (optionnel) : Pour activer l'envoi d'e-mails (mot de passe oublié). Si absent, l'application fonctionne normalement mais la fonctionnalité "mot de passe oublié" sera désactivée et le backend ne plantera pas.
+
+    Exemple avec variables :
+    ```bash
+    docker run -p 80:3000 -p 5001:5001 --name mwiclient -v /chemin/vers/vos/donnees/mywi:/data -e ADMIN_PASSWORD=MonMotDePasse -e RESEND_API_KEY=ma_cle_resend mwiclient:1.0
+    ```
+
 5.  **Accédez à l'application :**
     Ouvrez votre navigateur web et allez à l'adresse `http://localhost` (ou `http://localhost:80`).
+
+### ⚠️ Dépannage : Backend qui ne démarre pas ou crash (RESEND_API_KEY)
+
+Si le backend ne démarre pas et que vous voyez une erreur du type :
+```
+Error: Missing API key. Pass it to the constructor `new Resend("re_123")`
+```
+C'est que la variable d'environnement `RESEND_API_KEY` n'est pas définie.  
+Depuis la version corrigée, ce n'est plus bloquant : le backend démarre même sans cette variable, mais la fonctionnalité de récupération de mot de passe par e-mail sera désactivée (l'API retournera une erreur 501 explicite sur /api/auth/recover).
+
+Si vous avez une ancienne version, mettez à jour le code ou appliquez le correctif décrit dans `server/src/authRoutes.js`.
+
 
 ### Option 2 : Installation depuis le code source
 
@@ -125,17 +147,24 @@ Si vous avez oublié le mot de passe généré lors du premier lancement, ou si 
     Le contenu sera sous la forme `admin:VOTRE_MOT_DE_PASSE`.
 
 *   **Avec Docker :**
-    Le fichier `admin_password.txt` se trouve à l'intérieur du conteneur Docker, au chemin `/app/admin_password.txt`. Pour lire son contenu, utilisez la commande `docker exec` (en remplaçant `mwiclient` par le nom ou l'ID de votre conteneur si vous l'avez changé) :
+    Le fichier `admin_password.txt` se trouve à l'intérieur du conteneur Docker, au chemin `/app/admin_password.txt`.  
+    Pour lire son contenu, utilisez la commande :
     ```bash
     docker exec mwiclient cat /app/admin_password.txt
     ```
     Cela affichera `admin:VOTRE_MOT_DE_PASSE` dans votre terminal.
 
-    Vous pouvez également consulter les logs de démarrage du conteneur, car le mot de passe y est affiché lors de sa création :
+    Pour le copier sur votre machine hôte :
+    ```bash
+    docker cp mwiclient:/app/admin_password.txt ./admin_password.txt
+    ```
+
+    Vous pouvez également consulter les logs de démarrage du conteneur, car le mot de passe y est affiché lors de sa création :
     ```bash
     docker logs mwiclient
     ```
-    Recherchez une ligne similaire à `>>>>>>>>>> MOT DE PASSE ADMIN GÉNÉRÉ (initAdmin.js): VOTRE_MOT_DE_PASSE <<<<<<<<<<`.
+    Recherchez une ligne similaire à :  
+    `Mot de passe admin généré : VOTRE_MOT_DE_PASSE`
 
     2.  **Choisir votre propre mot de passe (Optionnel, lors de la première installation uniquement) :**
         Si vous préférez définir vous-même le mot de passe du compte `admin` **dès la création**, vous pouvez le faire en utilisant la variable d'environnement `ADMIN_PASSWORD` *avant* de lancer l'application pour la première fois. L'application utilisera alors le mot de passe que vous avez fourni.
