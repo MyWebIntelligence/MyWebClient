@@ -108,7 +108,10 @@ import { Resend } from "resend"
 // La clé API doit être définie dans la variable d'environnement RESEND_API_KEY.
 // Exemple: export RESEND_API_KEY="votre_clé_api"
 // Ou via la commande de démarrage: RESEND_API_KEY="votre_clé_api" yarn server
-const resend = new Resend(process.env.RESEND_API_KEY) // Instance du client Resend
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 /**
  * Route POST /api/auth/recover
@@ -127,6 +130,10 @@ router.post("/recover", async (req, res) => {
         if (err) return res.status(500).json({ error: "Erreur lors de la génération du token" })
 
         const resetUrl = `http://localhost:3000/reset-password?token=${token}` // Modifié pour pointer vers le client React
+        if (!resend) {
+            // Si Resend n'est pas configuré, retournez une erreur claire ou simulez le succès pour debug local
+            return res.status(501).json({ error: "Service d'envoi d'e-mail non configuré (RESEND_API_KEY manquant)" });
+        }
         try {
             await resend.emails.send({
                 from: "MyWebClient <no-reply@lakel.net>",
