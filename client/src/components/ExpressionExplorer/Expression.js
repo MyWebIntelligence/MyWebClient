@@ -37,7 +37,7 @@ function Expression(props) {
         setTextSelection(null)
         setSelectionStart(null)
         setSelectionEnd(null)
-    }, [context])
+    }, [context, context.currentExpressionTS, context.taggedContent])
 
     /**
      * Demande à l'utilisateur s'il souhaite sauvegarder les modifications avant de quitter la vue de l'expression.
@@ -389,7 +389,9 @@ function Expression(props) {
                                                     context.currentExpression.id,
                                                     textSelection,
                                                     selectionStart,
-                                                    selectionEnd)
+                                                    selectionEnd);
+                                                setTextSelection(null); // Ferme la pop-up de tagging
+                                                setTaggingPosition(null); // Réinitialise la position
                                             }}>Save</Button>
                                         </div>
                                     </div>

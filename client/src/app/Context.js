@@ -576,9 +576,14 @@ export class ConfigContext extends Component {
             start: start,
             end: end,
         }).then(res => {
-            if (res.data === true) {
-                console.log(`Saved tagged content`)
-                this.getTaggedContent({expressionId: expressionId})
+            if (res.data && (res.data === true || res.data.id || res.data.message)) {
+                console.log(`Saved tagged content`);
+                // On force le rafraîchissement en réinitialisant taggedContent à [] avant de recharger
+                this.setState({taggedContent: []}, () => {
+                    this.getTaggedContent({expressionId: expressionId});
+                    // Forcer le rechargement de l'expression pour que TaggedContent se rafraîchisse
+                    this.getExpression(expressionId);
+                });
             }
         })
     }
