@@ -10,8 +10,5 @@ services:
     environment:
       NODE_ENV: production
     volumes:
-      # Monte le répertoire /data du conteneur vers un répertoire sur l'hôte (VPS)
-      # Remplacez /chemin/absolut/vers/vos/donnees/mywi sur le VPS par le chemin réel
-      # où se trouve le dossier Data de votre projet MyWebIntelligencePython.
       - /data:/data
     restart: always
