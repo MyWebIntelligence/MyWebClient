@@ -4,9 +4,14 @@ services:
   mywebclient:
     build:
       context: .
-      dockerfile: Dockerfile.prod # Utilise le Dockerfile de production
+      dockerfile: Dockerfile.prod
     ports:
       - "5001:5001"
     environment:
-      NODE_ENV: production # Définit l'environnement de production
+      NODE_ENV: production
+    volumes:
+      # Monte le répertoire /data du conteneur vers un répertoire sur l'hôte (VPS)
+      # Remplacez /chemin/absolut/vers/vos/donnees/mywi sur le VPS par le chemin réel
+      # où se trouve le dossier Data de votre projet MyWebIntelligencePython.
+      - /data:/data
     restart: always

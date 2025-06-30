@@ -343,7 +343,7 @@ export class ConfigContext extends Component {
      * @param {number} expressionId - L'ID de l'expression.
      */
     getReadable = expressionId => {
-        axios.get(`/api/readable?id=${expressionId}`).then(res => {
+        axios.get(`/api/readable?id=${expressionId}&includeLinks=true&includeMedia=true`).then(res => {
             this.setState(state => {
                 const expression = state.currentExpression
                 expression.readable = res.data
