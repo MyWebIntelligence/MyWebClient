@@ -9,6 +9,8 @@ RUN yarn install
 
 # Construire l'application client React pour la production
 WORKDIR /app/client
+# Ajout de cette ligne pour résoudre l'erreur OpenSSL
+ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN yarn build
 WORKDIR /app
 
