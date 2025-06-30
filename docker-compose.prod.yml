@@ -10,5 +10,5 @@ services:
     environment:
       NODE_ENV: production
     volumes:
-      - /data:/data
+      - /home/ubuntu/data:/data
     restart: always
