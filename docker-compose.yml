@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  mywebclient:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      # Vous pouvez ajouter d'autres variables d'environnement ici si nécessaire
+      # Par exemple, pour la base de données ou d'autres configurations
+      NODE_ENV: production
+    volumes:
+      # Monter le répertoire du projet pour le développement (optionnel, mais utile pour les changements en direct)
+      # - .:/app
+      # Si vous ne voulez pas de montage de volume pour la production, commentez la ligne ci-dessus
+      # et assurez-vous que le Dockerfile copie bien tous les fichiers nécessaires.
+      - /app/node_modules # Exclure node_modules du montage si le volume est activé
+    restart: always
