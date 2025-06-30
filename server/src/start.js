@@ -39,7 +39,11 @@ app.use('/api/auth', authRoutes)
 // Middleware pour servir les fichiers statiques de l'application client React.
 // En développement, cela pointe vers le dossier `public` du client.
 // En production, cela devrait pointer vers le dossier `build` du client après la compilation.
-app.use(express.static(path.join(__dirname, '..', '..', 'client', 'public')));
+const clientPath = process.env.NODE_ENV === 'production'
+    ? path.join(__dirname, '..', '..', 'client', 'build')
+    : path.join(__dirname, '..', '..', 'client', 'public');
+
+app.use(express.static(clientPath));
 
 
 const port = process.env.PORT || 5001 // Définit le port d'écoute du serveur
