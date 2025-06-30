@@ -1,0 +1,16 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY . .
+
+# Installer les dépendances du serveur et du client
+RUN yarn install
+
+# Construire l'application client React pour la production
+WORKDIR /app/client
+RUN yarn build
+WORKDIR /app
+
+# La commande de démarrage du serveur
+CMD ["yarn", "server"]

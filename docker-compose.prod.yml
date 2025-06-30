@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  mywebclient:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod # Utilise le Dockerfile de production
+    ports:
+      - "5001:5001"
+    environment:
+      NODE_ENV: production # Définit l'environnement de production
+    restart: always
