@@ -4,6 +4,7 @@ services:
   mywebclient:
     build: .
     ports:
+      - "3001:3000"
       - "5001:5001"
     environment:
       # Vous pouvez ajouter d'autres variables d'environnement ici si nécessaire

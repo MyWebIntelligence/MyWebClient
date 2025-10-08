@@ -11,6 +11,47 @@ import Mercury from "@postlight/mercury-parser" // Utilisé pour extraire le con
 let db // Instance unique de la base de données principale
 
 /**
+ * Certains dumps récents de MyWebIntelligencePython créent un index
+ * `idx_media_dimensions` avec une racine invalide pour la version de SQLite
+ * embarquée par `sqlite3` côté Node. Cela se traduit par l'erreur
+ * `SQLITE_CORRUPT: malformed database schema (idx_media_dimensions) - invalid rootpage`
+ * dès la première requête (ex: SELECT sur `land`).
+ *
+ * Pour garantir la compatibilité, on reconstruit systématiquement cet index
+ * après la connexion afin de s'assurer qu'il est cohérent avec la librairie
+ * utilisée côté serveur.
+ *
+ * L'opération est idempotente et n'échoue pas si l'index n'existe pas encore.
+ * @returns {Promise<void>} Résolue une fois la normalisation terminée
+ */
+const ensureMediaIndexCompatibility = () => new Promise(resolve => {
+    if (!db) {
+        resolve()
+        return
+    }
+
+    db.serialize(() => {
+        db.run('DROP INDEX IF EXISTS idx_media_dimensions', dropErr => {
+            if (dropErr) {
+                console.warn('Unable to drop idx_media_dimensions:', dropErr.message)
+            }
+
+            db.run(
+                'CREATE INDEX IF NOT EXISTS idx_media_dimensions ON media(width, height)',
+                createErr => {
+                    if (createErr) {
+                        console.warn('Unable to recreate idx_media_dimensions:', createErr.message)
+                    } else {
+                        console.log('Media dimension index verified for compatibility')
+                    }
+                    resolve()
+                }
+            )
+        })
+    })
+})
+
+/**
  * Génère une chaîne de placeholders SQL (?) pour les requêtes préparées,
  * en fonction du nombre de paramètres.
  * @param {Array|any} params - Un tableau de paramètres ou une seule valeur.
@@ -64,36 +105,32 @@ const getSiblingExpression = (offset, req, res) => {
 
     const column = validateSortColumn(req.query.sortColumn || 'e.id');
     const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC';
-    // Pour LEAD, le deuxième argument est le nombre de lignes à avancer. 
-    // Si offset est -1 (précédent), on veut avancer de 1 dans l'ordre inverse.
-    // SQLite ne supporte pas LAG directement avec un offset négatif pour LEAD de cette manière.
-    // La logique correcte est d'inverser l'ordre de tri pour "prev" et d'utiliser LEAD avec 1.
-    // Cependant, la requête originale utilise LEAD(e.id, ${offset}, ...) ce qui est incorrect pour -1.
-    // Une approche plus simple est de garder l'offset positif et de gérer la direction avec ORDER BY.
-    // Mais la requête originale semble vouloir utiliser l'offset directement.
-    // Pour LEAD, l'offset doit être positif. Si on veut "précédent", il faut inverser l'ordre et prendre le premier.
-    // La requête actuelle avec GROUP BY e.id et LEAD/LAG dans une sous-requête est complexe.
-    // Simplifions ou corrigeons la logique de LEAD/LAG si possible, ou assurons-nous que l'offset est toujours positif.
-    // La requête originale utilise `LEAD(e.id, ${offset}, NULL)`. Si offset est -1, cela ne fonctionnera pas comme attendu.
-    // Il est probable que l'intention était d'utiliser LAG pour offset=-1 ou de changer l'ordre.
-    // Pour l'instant, on va s'assurer que l'offset pour LEAD est positif.
-    const leadOffset = offset < 0 ? 1 : offset; // Assure un offset positif pour LEAD
-    const effectiveOrder = offset < 0 ? (order === 'ASC' ? 'DESC' : 'ASC') : order; // Inverse l'ordre pour "précédent"
+    const tieBreakerOrder = order === 'ASC' ? 'ASC' : 'DESC';
+    const windowOrder = `${column} ${order}, e.id ${tieBreakerOrder}`;
+    const operator = offset < 0 ? '-' : '+';
+    const step = offset < 0 ? -1 : 1;
 
-    const sql = `SELECT sibling
-                     FROM (
-                          SELECT e.id,
-                                 LEAD(e.id, ${leadOffset}, NULL) OVER (ORDER BY ${column} ${effectiveOrder}) AS sibling
-                          FROM expression AS e
-                                   JOIN domain AS d ON d.id = e.domain_id
-                                   LEFT JOIN taggedcontent AS t ON t.expression_id = e.id
-                          WHERE e.land_id = ?
-                            AND e.http_status = 200
-                            AND e.relevance >= ?
-                            AND e.depth <= ?
-                          GROUP BY e.id
-                      ) AS t
-                     WHERE t.id = ?`
+    const sql = `WITH ordered AS (
+                        SELECT e.id,
+                               ROW_NUMBER() OVER (ORDER BY ${windowOrder}) AS position
+                        FROM expression AS e
+                                 JOIN domain AS d ON d.id = e.domain_id
+                        WHERE e.land_id = ?
+                          AND e.http_status = 200
+                          AND e.relevance >= ?
+                          AND e.depth <= ?
+                   ),
+                   current AS (
+                        SELECT position
+                        FROM ordered
+                        WHERE id = ?
+                   )
+                   SELECT ordered.id AS sibling
+                   FROM ordered
+                   WHERE ordered.position = (
+                        SELECT position ${operator} ${Math.abs(step)}
+                        FROM current
+                   )`
 
     console.log("Executing getSiblingExpression with params:", params, "SQL:", sql);
     db.get(sql, params, (err, row) => {
@@ -150,8 +187,10 @@ const DataQueries = {
                 res.json(false); // Ne pas envoyer de statut 500 ici, le client gère `false`
             } else {
                 db.run('PRAGMA foreign_keys = ON'); // Active le support des clés étrangères
-                console.log(`Connected to ${req.query.db}`);
-                res.json(true);
+                ensureMediaIndexCompatibility().then(() => {
+                    console.log(`Connected to ${req.query.db}`);
+                    res.json(true);
+                })
             }
         })
     },
@@ -257,6 +296,8 @@ const DataQueries = {
         const column = validateSortColumn(req.query.sortColumn || 'e.id');
         const order = parseInt(req.query.sortOrder) === 1 ? 'ASC' : 'DESC';
 
+        const tieBreakerOrder = order === 'ASC' ? 'ASC' : 'DESC';
+
         const sql = `SELECT e.id AS id,
                             e.title,
                             e.url,
@@ -273,7 +314,7 @@ const DataQueries = {
                        AND e.relevance >= ?
                        AND e.depth <= ?
                      GROUP BY e.id
-                     ORDER BY ${column} ${order}
+                     ORDER BY ${column} ${order}, e.id ${tieBreakerOrder}
                      LIMIT ?, ?`
         
         console.log("Executing getExpressions query:", sql, "with params:", params);
