@@ -26,3 +26,10 @@ yarn-debug.log*
 yarn-error.log*
 Data/
 admin.db
+*.db
+*.db-shm
+*.db-wal
+admin_password.txt
+.Rhistory
+AGENTS.md
+test.db
