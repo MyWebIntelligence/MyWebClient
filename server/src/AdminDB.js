@@ -7,6 +7,7 @@
 import sqlite from "sqlite3"
 import fs from "fs" // Ajout de l'import fs
 import path from "path" // Ajout de l'import path
+import { fileURLToPath } from "url" // Pour gérer les chemins avec import.meta.url
 
 let adminDB // Instance unique de la base de données
 
@@ -29,7 +30,9 @@ const connectAdminDB = (dbPath = "admin.db") => {
                         return
                     }
                     // Exécuter les migrations
-                    const migrationsPath = path.join(path.dirname(import.meta.url.replace('file://', '')), 'migrations_auth.sql')
+                    const __filename = fileURLToPath(import.meta.url)
+                    const __dirname = path.dirname(__filename)
+                    const migrationsPath = path.join(__dirname, 'migrations_auth.sql')
                     fs.readFile(migrationsPath, 'utf8', (fsErr, sqlScript) => {
                         if (fsErr) {
                             console.error("Erreur lecture fichier migrations_auth.sql:", fsErr.message)
